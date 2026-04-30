@@ -1,0 +1,834 @@
+cat > /mnt/user-data/outputs/index.html << 'ENDOFFILE'
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta name="theme-color" content="#1a1a2e"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Fidélie"/>
+<title>Fidélie Hôtel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1a1a2e}
+input,select,button{font-family:inherit;font-size:14px}
+.hide{display:none!important}
+#syncbar{position:fixed;bottom:0;left:0;right:0;background:#059669;color:#fff;text-align:center;font-size:12px;font-weight:700;padding:6px;z-index:500;transition:all .3s}
+#syncbar.off{background:#f59e0b}
+#syncbar.err{background:#dc2626}
+#header{background:linear-gradient(135deg,#1a1a2e,#0f3460);padding:16px 18px 12px;color:#fff;position:sticky;top:0;z-index:100}
+#header h1{font-size:18px;font-weight:800}
+#header small{font-size:10px;opacity:.6;letter-spacing:2px;text-transform:uppercase}
+.occ{color:#fbbf24}
+#tabs{background:#fff;border-bottom:1px solid #f0f0f0;display:flex;overflow-x:auto;position:sticky;top:68px;z-index:99}
+#tabs::-webkit-scrollbar{display:none}
+.tab-btn{flex:0 0 auto;padding:10px 13px;border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;color:#9ca3af;font-size:11px;font-weight:500;text-align:center;position:relative}
+.tab-btn.active{border-bottom-color:#1a1a2e;color:#1a1a2e;font-weight:700}
+.tbadge{position:absolute;top:5px;right:3px;background:#ef4444;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700}
+#content{padding:14px;padding-bottom:70px;max-width:500px;margin:0 auto}
+.page{display:none}.page.active{display:block}
+.card{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:10px}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.stat{border-radius:12px;padding:12px 8px;text-align:center}
+.stat .val{font-size:22px;font-weight:800}
+.stat .lbl{font-size:11px;font-weight:600}
+.ch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:10px}
+.ch-card{border:2px solid #e5e7eb;border-radius:12px;padding:11px;background:#fff}
+.ch-card.occ2{border-color:#fca5a5;background:#fff5f5}
+.ch-card.maint{border-color:#fde68a;background:#fffbeb}
+.bs{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.b-libre{background:#d1fae5;color:#065f46}.b-occ{background:#fee2e2;color:#991b1b}
+.b-maint{background:#fef3c7;color:#92400e}.b-conf{background:#d1fae5;color:#065f46}
+.b-att{background:#fef3c7;color:#92400e}.b-ann{background:#fee2e2;color:#991b1b}
+.b-cin{background:#dbeafe;color:#1e40af}.b-cout{background:#f3f4f6;color:#374151}
+.filtres{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px}
+.filtres::-webkit-scrollbar{display:none}
+.fb{flex:0 0 auto;padding:5px 12px;border-radius:20px;border:2px solid #e5e7eb;background:transparent;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer}
+.fb.active{border-color:#1a1a2e;background:#1a1a2e;color:#fff}
+.btn{border-radius:8px;padding:10px 18px;font-size:14px;font-weight:700;cursor:pointer;border:2px solid;display:inline-block}
+.bsm{padding:6px 11px;font-size:12px}
+.bfull{width:100%;display:block;text-align:center}
+.bdark{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.bgreen{background:#059669;color:#fff;border-color:#059669}
+.bred{background:#dc2626;color:#fff;border-color:#dc2626}
+.bblue{background:#1d4ed8;color:#fff;border-color:#1d4ed8}
+.bpurp{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.bor-dark{background:transparent;color:#1a1a2e;border-color:#1a1a2e}
+.bor-red{background:transparent;color:#dc2626;border-color:#dc2626}
+.bor-yel{background:transparent;color:#f59e0b;border-color:#f59e0b}
+.brow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:11px;font-weight:700;color:#6b7280;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.fg input,.fg select{width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:9px 11px;outline:none;background:#fff;-webkit-appearance:none}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+#mbg{position:fixed;inset:0;background:rgba(10,15,30,.75);z-index:200;display:none;align-items:flex-end;justify-content:center}
+#mbg.open{display:flex}
+#modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding-bottom:20px}
+#mhdr{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;position:sticky;top:0;background:#fff;z-index:1}
+#mhdr h3{font-size:16px;font-weight:800}
+#mcls{background:none;border:none;font-size:24px;cursor:pointer;color:#999;line-height:1}
+#mbody{padding:16px 20px}
+.recap{background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:12px;margin-bottom:12px}
+.rr{display:flex;justify-content:space-between;align-items:center}
+.rr+.rr{border-top:1px solid #bbf7d0;margin-top:8px;padding-top:8px}
+.alerte{border-radius:10px;padding:12px;margin-bottom:10px}
+.ag{background:#d1fae5;border:2px solid #6ee7b7}
+.ar{background:#fee2e2;border:2px solid #fca5a5}
+.ay{background:#fef3c7;border:2px solid #fde68a}
+.acr{background:#fff1f2;border:2px solid #fecdd3}
+.alerte h4{font-size:13px;font-weight:700;margin-bottom:6px}
+.alerte p{font-size:12px}
+.ccards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.ccard{border-radius:14px;padding:15px;color:#fff}
+.cc1{background:linear-gradient(135deg,#1a1a2e,#16213e)}
+.cc2{background:linear-gradient(135deg,#065f46,#047857)}
+.ccard small{font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:1px}
+.ccard .amt{font-size:20px;font-weight:800;margin-top:4px}
+.ccard .sub{font-size:10px;opacity:.5;margin-top:2px}
+.tchips{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.tchip{border-radius:10px;padding:10px 12px}
+.tchip .tl{font-size:11px;font-weight:700;color:#374151}
+.tchip .tv{font-size:15px;font-weight:800;color:#1a1a2e}
+.txrow{display:flex;justify-content:space-between;align-items:center;padding:9px 11px;border-radius:10px;margin-bottom:6px}
+.txrow .td{font-weight:600;font-size:13px}
+.txrow .tm{font-size:11px;color:#6b7280}
+.txrow .ta{font-weight:800;font-size:14px;color:#059669;white-space:nowrap}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.mitem{border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 12px;cursor:pointer;background:#fff;display:flex;justify-content:space-between;align-items:center}
+.plus{font-size:20px;color:#7c3aed;font-weight:800}
+.cmdbox{background:#faf5ff;border:2px solid #ddd6fe;border-radius:12px;padding:14px;margin-bottom:14px}
+.cmdrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cmdctl{display:flex;align-items:center;gap:8px}
+.cmdbtn{background:#ede9fe;border:none;border-radius:6px;width:26px;height:26px;cursor:pointer;font-weight:700;font-size:16px}
+.cmdtot{border-top:1.5px solid #ddd6fe;margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;font-weight:800}
+.sbar{background:#f3f4f6;border-radius:4px;height:6px;margin:6px 0 2px}
+.sfill{height:100%;border-radius:4px}
+.dr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f3f4f6;font-size:13px}
+.dk{color:#6b7280}.dv{font-weight:700}
+.sinput{width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:9px 11px;font-size:14px;outline:none;background:#fff;margin-bottom:12px}
+.calnav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.calnav button{background:none;border:none;font-size:22px;cursor:pointer;padding:4px 12px;color:#374151}
+.calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cdlbl{text-align:center;font-size:10px;font-weight:700;color:#9ca3af;padding:4px 0}
+.cday{border-radius:8px;min-height:42px;padding:5px 3px;text-align:center;border:1.5px solid #f0f0f0;background:#f9fafb}
+.cday.tod{background:#1a1a2e;border-color:#1a1a2e;color:#fff}
+.cday.cocc{background:#dbeafe;border-color:#93c5fd}
+.cday .dn{font-size:12px;font-weight:700}
+.cday .do{font-size:10px;font-weight:700;color:#1e40af}
+.cday.tod .do{color:#93c5fd}
+.chsg{display:grid;grid-template-columns:repeat(auto-fill,minmax(65px,1fr));gap:6px;max-height:175px;overflow-y:auto;padding:2px}
+.chsb{border-radius:8px;padding:6px 4px;text-align:center;border:2px solid #e5e7eb;background:#fff;cursor:pointer}
+.chsb.sel{border-color:#059669;background:#d1fae5}
+.chsb.tk{opacity:.4;cursor:not-allowed}
+.chsb .cn{font-size:13px;font-weight:800}
+.chsb .ct{font-size:9px;color:#6b7280}
+.chsb .cp{font-size:10px;font-weight:700;color:#9ca3af}
+.chsb.sel .cp{color:#059669}
+.loading{text-align:center;padding:40px;color:#9ca3af;font-size:14px}
+</style>
+</head>
+<body>
+
+<div id="syncbar">🟢 Synchronisé en temps réel</div>
+
+<div id="header">
+  <small>Fidélie Hôtel · Kribi</small>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+    <h1>Gestion Hôtel</h1>
+    <div style="text-align:right">
+      <div style="font-size:10px;opacity:.6" id="hdate"></div>
+      <div style="font-size:13px;margin-top:2px">Occ: <span class="occ" id="hocc">0</span>/27</div>
+    </div>
+  </div>
+</div>
+
+<div id="tabs">
+  <button class="tab-btn active" onclick="goTab('chambres')" id="tb-chambres">🛏️<br>Chambres</button>
+  <button class="tab-btn" onclick="goTab('reservations')" id="tb-reservations">📋<br>Réservations<span class="tbadge hide" id="bdgrez">0</span></button>
+  <button class="tab-btn" onclick="goTab('bar')" id="tb-bar">🍽️<br>Bar&Resto</button>
+  <button class="tab-btn" onclick="goTab('caisse')" id="tb-caisse">💰<br>Caisse</button>
+  <button class="tab-btn" onclick="goTab('clients')" id="tb-clients">👥<br>Clients</button>
+  <button class="tab-btn" onclick="goTab('stock')" id="tb-stock">📦<br>Stock<span class="tbadge hide" id="bdgstk">0</span></button>
+</div>
+
+<div id="content">
+  <div class="page active" id="page-chambres">
+    <div class="stats">
+      <div class="stat" style="background:#d1fae5"><div class="val" style="color:#065f46" id="slibres">—</div><div class="lbl" style="color:#065f46">Libres</div></div>
+      <div class="stat" style="background:#fee2e2"><div class="val" style="color:#991b1b" id="socc">—</div><div class="lbl" style="color:#991b1b">Occupées</div></div>
+      <div class="stat" style="background:#ede9fe"><div class="val" style="color:#5b21b6">27</div><div class="lbl" style="color:#5b21b6">Total</div></div>
+    </div>
+    <div class="filtres" id="chfiltres">
+      <button class="fb active" onclick="setCF('tous',this)">Toutes</button>
+      <button class="fb" onclick="setCF('libre',this)">Libre</button>
+      <button class="fb" onclick="setCF('occupée',this)">Occupée</button>
+      <button class="fb" onclick="setCF('maintenance',this)">Maintenance</button>
+    </div>
+    <div class="ch-grid" id="chgrid"><div class="loading">⏳ Chargement...</div></div>
+  </div>
+
+  <div class="page" id="page-reservations">
+    <div id="rezalerts"></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <button class="btn bgreen" onclick="openRezForm()">+ Nouvelle réservation</button>
+      <div style="margin-left:auto;display:flex;gap:4px">
+        <button class="btn bdark bsm" id="vbl" onclick="setRV('liste')">📋</button>
+        <button class="btn bor-dark bsm" id="vbc" onclick="setRV('cal')">📆</button>
+      </div>
+    </div>
+    <div id="rezliste">
+      <input class="sinput" placeholder="🔍 Chercher client ou chambre..." oninput="filterRez(this.value)"/>
+      <div class="filtres" id="rezfiltres">
+        <button class="fb active" onclick="setRF('tous',this)">Tous</button>
+        <button class="fb" onclick="setRF('confirmée',this)">Confirmée</button>
+        <button class="fb" onclick="setRF('en attente',this)">En attente</button>
+        <button class="fb" onclick="setRF('check-in',this)">Check-in</button>
+        <button class="fb" onclick="setRF('check-out',this)">Check-out</button>
+        <button class="fb" onclick="setRF('annulée',this)">Annulée</button>
+      </div>
+      <div id="rezlist"><div class="loading">⏳ Chargement...</div></div>
+    </div>
+    <div id="rezcal" class="hide">
+      <div class="calnav">
+        <button onclick="calPrev()">‹</button>
+        <strong id="caltitle"></strong>
+        <button onclick="calNext()">›</button>
+      </div>
+      <div class="calgrid" id="calgrid"></div>
+    </div>
+  </div>
+
+  <div class="page" id="page-bar">
+    <div class="frow" style="margin-bottom:12px">
+      <div class="fg"><label>Table / Client</label><input id="bartable" placeholder="Table 3..."/></div>
+      <div class="fg"><label>Serveur</label><select id="baremp"></select></div>
+    </div>
+    <div class="filtres" id="barcats"></div>
+    <div class="mgrid" id="menugrid"></div>
+    <div id="cmdbox" class="hide">
+      <div class="cmdbox">
+        <div style="font-weight:700;color:#5b21b6;margin-bottom:10px">🧾 Commande en cours</div>
+        <div id="cmditems"></div>
+        <div class="cmdtot"><span>TOTAL</span><span id="cmdtotamt" style="color:#059669"></span></div>
+        <button class="btn bgreen bfull" style="margin-top:10px" onclick="validerCmd()">✅ Valider & Encaisser</button>
+      </div>
+    </div>
+    <div id="barhisto"></div>
+  </div>
+
+  <div class="page" id="page-caisse">
+    <div class="ccards">
+      <div class="ccard cc1"><small>Aujourd'hui</small><div class="amt" id="cjour">0 F</div><div class="sub" id="cjournb">0 transaction(s)</div></div>
+      <div class="ccard cc2"><small>Ce mois</small><div class="amt" id="cmois">0 F</div></div>
+    </div>
+    <div class="tchips" id="tchips"></div>
+    <button class="btn bdark bfull" style="margin-bottom:14px" onclick="openCaisseForm()">+ Ajouter une recette</button>
+    <div id="txlist"><div class="loading">⏳ Chargement...</div></div>
+  </div>
+
+  <div class="page" id="page-clients">
+    <input class="sinput" placeholder="🔍 Rechercher un client..." oninput="filterCl(this.value)"/>
+    <div id="cllist"><div class="loading">⏳ Chargement...</div></div>
+  </div>
+
+  <div class="page" id="page-stock">
+    <div id="stkalerts"></div>
+    <button class="btn bdark bfull" style="margin-bottom:12px" onclick="openStockForm()">+ Nouvel article</button>
+    <div id="stklist"><div class="loading">⏳ Chargement...</div></div>
+  </div>
+</div>
+
+<div id="mbg" onclick="closeMBG(event)">
+  <div id="modal">
+    <div id="mhdr"><h3 id="mtitle"></h3><button id="mcls" onclick="closeModal()">×</button></div>
+    <div id="mbody"></div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCMspEIcWGi6dYVX7aNZScHQYKPPlRXY50",
+  authDomain: "fidelie-hotel.firebaseapp.com",
+  projectId: "fidelie-hotel",
+  storageBucket: "fidelie-hotel.firebasestorage.app",
+  messagingSenderId: "697423263168",
+  appId: "1:697423263268:web:67e0297cd05c6a37ee0425"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── Constantes ────────────────────────────────────────────────────
+const CH_NUMS = Array.from({length:27},(_,i)=>101+i);
+const PRIX = {117:45000, 121:20000};
+const TYPES = {117:"Suite", 121:"VIP"};
+const getPrix = n => PRIX[n]||15000;
+const getType = n => TYPES[n]||"Standard";
+const EMP = ["Réception","Mamadou","Clarisse","Roger"];
+const SRC = ["Direct / Téléphone","WhatsApp","Site web","Walk-in","Agence"];
+const MENU = [
+  {id:1,cat:"Plats",nom:"Poulet DG",prix:3500},{id:2,cat:"Plats",nom:"Poisson braisé",prix:4000},
+  {id:3,cat:"Plats",nom:"Ndolé",prix:2500},{id:4,cat:"Plats",nom:"Eru",prix:2500},
+  {id:5,cat:"Plats",nom:"Riz sauté",prix:1500},{id:6,cat:"Boissons",nom:"Bière 33cl",prix:800},
+  {id:7,cat:"Boissons",nom:"Eau minérale",prix:500},{id:8,cat:"Boissons",nom:"Jus naturel",prix:1000},
+  {id:9,cat:"Boissons",nom:"Cocktail",prix:2000},{id:10,cat:"Boissons",nom:"Vin rouge",prix:3000},
+];
+const STOCK_DEFAULT = [
+  {nom:"Savon de bain",qte:80,seuil:20,unite:"pcs"},{nom:"Shampoing",qte:60,seuil:15,unite:"pcs"},
+  {nom:"Papier toilette",qte:120,seuil:30,unite:"roul."},{nom:"Détergent linge",qte:25,seuil:5,unite:"kg"},
+  {nom:"Eau de Javel",qte:15,seuil:3,unite:"L"},{nom:"Serviettes bain",qte:55,seuil:20,unite:"pcs"},
+  {nom:"Draps (jeux)",qte:40,seuil:15,unite:"jeux"},{nom:"Désinfectant",qte:8,seuil:2,unite:"L"},
+];
+const TC = {Chambre:"#dbeafe",Restaurant:"#d1fae5",Bar:"#ede9fe",Divers:"#f3f4f6"};
+const MOIS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const BC = {libre:"b-libre",occupée:"b-occ",maintenance:"b-maint",confirmée:"b-conf","en attente":"b-att",annulée:"b-ann","check-in":"b-cin","check-out":"b-cout"};
+
+// ── State ─────────────────────────────────────────────────────────
+let CHAMBRES = {}, REZ = {}, TX = {}, STK = {};
+let CMD = [], HISTO = [];
+let cF="tous", rF="tous", rS="", clS="", barCat="Tous";
+let calY=new Date().getFullYear(), calM=new Date().getMonth();
+let editRezId=null, editStkId=null, rezView="liste";
+
+// ── Helpers ───────────────────────────────────────────────────────
+const fmt = n => Number(n).toLocaleString("fr-FR")+" F";
+const tod = () => new Date().toISOString().split("T")[0];
+const fmtD = d => d ? new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+const diff = (a,b) => Math.ceil((new Date(b)-new Date(a))/86400000);
+const addD = (d,n) => { const r=new Date(d+"T12:00:00"); r.setDate(r.getDate()+n); return r.toISOString().split("T")[0]; };
+const opt = (a,s="") => a.map(e=>`<option value="${e}"${e===s?" selected":""}>${e}</option>`).join("");
+const bdg = s => `<span class="bs ${BC[s]||'b-att'}">${s}</span>`;
+const getSt = num => {
+  const ch = CHAMBRES[num]||{};
+  const ra = Object.values(REZ).find(r=>r.chambre===num&&r.statut==="check-in");
+  return ra ? "occupée" : (ch.statut||"libre");
+};
+
+// ── Sync status ───────────────────────────────────────────────────
+function setSyncBar(state) {
+  const bar = document.getElementById("syncbar");
+  if(state==="ok") { bar.className=""; bar.textContent="🟢 Synchronisé en temps réel"; }
+  else if(state==="off") { bar.className="off"; bar.textContent="🟡 Hors ligne — données locales"; }
+  else { bar.className="err"; bar.textContent="🔴 Erreur de connexion"; }
+}
+window.addEventListener("online", ()=>setSyncBar("ok"));
+window.addEventListener("offline", ()=>setSyncBar("off"));
+
+// ── Firebase Listeners (temps réel) ──────────────────────────────
+function startListeners() {
+  // Chambres
+  onSnapshot(collection(db,"chambres"), snap => {
+    snap.forEach(d => { CHAMBRES[d.id] = {...d.data(), id:d.id}; });
+    // Init chambres manquantes
+    CH_NUMS.forEach(num => {
+      if(!CHAMBRES[num]) {
+        setDoc(doc(db,"chambres",String(num)), {num, statut:"libre", prix:getPrix(num), type:getType(num)});
+      }
+    });
+    renderCH(); upHdr();
+  }, ()=>setSyncBar("err"));
+
+  // Réservations
+  onSnapshot(query(collection(db,"reservations"),orderBy("createdAt","desc")), snap => {
+    REZ = {};
+    snap.forEach(d => { REZ[d.id] = {...d.data(), id:d.id}; });
+    renderREZ(); renderClients(); upHdr();
+  }, ()=>setSyncBar("err"));
+
+  // Transactions
+  onSnapshot(query(collection(db,"transactions"),orderBy("createdAt","desc")), snap => {
+    TX = {};
+    snap.forEach(d => { TX[d.id] = {...d.data(), id:d.id}; });
+    renderCaisse(); renderClients();
+  }, ()=>setSyncBar("err"));
+
+  // Stock
+  onSnapshot(collection(db,"stock"), snap => {
+    STK = {};
+    snap.forEach(d => { STK[d.id] = {...d.data(), id:d.id}; });
+    // Init stock par défaut si vide
+    if(Object.keys(STK).length===0) {
+      STOCK_DEFAULT.forEach(s => addDoc(collection(db,"stock"), {...s, createdAt:Date.now()}));
+    }
+    renderStk(); upHdr();
+  }, ()=>setSyncBar("err"));
+}
+
+// ── DB helpers ────────────────────────────────────────────────────
+async function saveChambre(num, data) {
+  await setDoc(doc(db,"chambres",String(num)), {...data, num}, {merge:true});
+}
+async function saveRezDB(id, data) {
+  if(id) await setDoc(doc(db,"reservations",String(id)), {...data, updatedAt:Date.now()}, {merge:true});
+  else await addDoc(collection(db,"reservations"), {...data, createdAt:Date.now()});
+}
+async function addTXDB(data) {
+  await addDoc(collection(db,"transactions"), {...data, createdAt:Date.now()});
+}
+async function saveStkDB(id, data) {
+  if(id) await setDoc(doc(db,"stock",String(id)), {...data, updatedAt:Date.now()}, {merge:true});
+  else await addDoc(collection(db,"stock"), {...data, createdAt:Date.now()});
+}
+async function delStkDB(id) { await deleteDoc(doc(db,"stock",String(id))); }
+async function updateRezStatut(id, statut) {
+  await setDoc(doc(db,"reservations",String(id)), {statut, updatedAt:Date.now()}, {merge:true});
+}
+
+// ── HEADER ────────────────────────────────────────────────────────
+function upHdr() {
+  const occ = CH_NUMS.filter(n=>getSt(n)==="occupée").length;
+  document.getElementById("hocc").textContent = occ;
+  document.getElementById("slibres").textContent = CH_NUMS.filter(n=>getSt(n)==="libre").length;
+  document.getElementById("socc").textContent = occ;
+  const att = Object.values(REZ).filter(r=>r.statut==="en attente").length;
+  const br = document.getElementById("bdgrez");
+  br.textContent=att; att>0?br.classList.remove("hide"):br.classList.add("hide");
+  const sb = Object.values(STK).filter(s=>s.qte<=s.seuil).length;
+  const bs = document.getElementById("bdgstk");
+  bs.textContent=sb; sb>0?bs.classList.remove("hide"):bs.classList.add("hide");
+}
+
+// ── TABS ──────────────────────────────────────────────────────────
+window.goTab = id => {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  document.getElementById("tb-"+id).classList.add("active");
+};
+
+// ── CHAMBRES ──────────────────────────────────────────────────────
+window.setCF = (f,b) => { cF=f; document.querySelectorAll("#chfiltres .fb").forEach(x=>x.classList.remove("active")); b.classList.add("active"); renderCH(); };
+
+function renderCH() {
+  const list = cF==="tous" ? CH_NUMS : CH_NUMS.filter(n=>getSt(n)===cF);
+  document.getElementById("chgrid").innerHTML = list.map(num => {
+    const st = getSt(num);
+    const ra = Object.values(REZ).find(r=>r.chambre===num&&r.statut==="check-in");
+    const prix = getPrix(num); const type = getType(num);
+    return `<div class="ch-card ${st==="occupée"?"occ2":st==="maintenance"?"maint":""}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
+        <span style="font-size:18px;font-weight:800">${num}</span>${bdg(st)}
+      </div>
+      <div style="font-size:11px;color:#6b7280">${type}</div>
+      <div style="font-size:13px;font-weight:700;color:#374151;margin-bottom:6px">${fmt(prix)}/nuit</div>
+      ${ra?`<div style="font-size:11px;font-weight:600;margin-bottom:2px">👤 ${ra.client}</div><div style="font-size:10px;color:#6b7280;margin-bottom:6px">→ ${fmtD(ra.checkOut)}</div>`:""}
+      <div class="brow">
+        ${st==="libre"?`<button class="btn bgreen bsm" onclick="openCI(${num})">Check-in</button>`:""}
+        ${st==="occupée"?`<button class="btn bred bsm" onclick="doCO(${num})">Check-out</button>`:""}
+        <button class="btn bor-yel bsm" onclick="togMaint(${num})">🔧</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+window.openCI = num => {
+  openModal(`Check-in — Ch.${num} (${fmt(getPrix(num))}/nuit)`,`
+    <div class="fg"><label>Client *</label><input id="fci-cl" placeholder="Nom complet"/></div>
+    <div class="frow">
+      <div class="fg"><label>Arrivée *</label><input type="date" id="fci-in" value="${tod()}" onchange="upRecapCI(${num})"/></div>
+      <div class="fg"><label>Départ *</label><input type="date" id="fci-out" value="${addD(tod(),1)}" onchange="upRecapCI(${num})"/></div>
+    </div>
+    <div class="fg"><label>Par</label><select id="fci-emp">${opt(EMP)}</select></div>
+    <div id="rci"></div>
+    <button class="btn bgreen bfull" onclick="doCI(${num})">✅ Confirmer</button>
+  `);
+  upRecapCI(num);
+};
+window.upRecapCI = num => {
+  const ci=document.getElementById("fci-in")?.value;
+  const co=document.getElementById("fci-out")?.value;
+  if(!ci||!co) return;
+  const n=Math.max(1,diff(ci,co));
+  const el=document.getElementById("rci");
+  if(el) el.innerHTML=`<div class="recap" style="margin-bottom:12px"><div class="rr"><span>${n} nuit${n>1?"s":""} × ${fmt(getPrix(num))}</span><strong style="color:#059669;font-size:15px">${fmt(getPrix(num)*n)}</strong></div></div>`;
+};
+window.doCI = async num => {
+  const cl=document.getElementById("fci-cl")?.value?.trim();
+  const ci=document.getElementById("fci-in")?.value;
+  const co=document.getElementById("fci-out")?.value;
+  const emp=document.getElementById("fci-emp")?.value||EMP[0];
+  if(!cl||!ci||!co){alert("Remplis tous les champs.");return;}
+  const n=Math.max(1,diff(ci,co));
+  await addTXDB({type:"Chambre",desc:`Ch.${num} — ${cl} (${n} nuit${n>1?"s":""})`,montant:getPrix(num)*n,employe:emp,date:tod()});
+  await saveChambre(num,{statut:"occupée",client:cl,checkIn:ci,checkOut:co});
+  closeModal();
+};
+window.doCO = async num => {
+  if(!confirm(`Check-out chambre ${num} ?`)) return;
+  await saveChambre(num,{statut:"libre",client:"",checkIn:"",checkOut:""});
+};
+window.togMaint = async num => {
+  const cur = CHAMBRES[num]?.statut||"libre";
+  await saveChambre(num,{statut:cur==="maintenance"?"libre":"maintenance"});
+};
+
+// ── RÉSERVATIONS ──────────────────────────────────────────────────
+window.setRV = v => {
+  rezView=v;
+  document.getElementById("rezliste").classList.toggle("hide",v!=="liste");
+  document.getElementById("rezcal").classList.toggle("hide",v!=="cal");
+  document.getElementById("vbl").className="btn bsm "+(v==="liste"?"bdark":"bor-dark");
+  document.getElementById("vbc").className="btn bsm "+(v==="cal"?"bdark":"bor-dark");
+  if(v==="cal") renderCal();
+};
+window.setRF = (f,b) => { rF=f; document.querySelectorAll("#rezfiltres .fb").forEach(x=>x.classList.remove("active")); b.classList.add("active"); renderREZ(); };
+window.filterRez = v => { rS=v; renderREZ(); };
+
+function renderREZ() {
+  const dem=addD(tod(),1);
+  const arr=Object.values(REZ).filter(r=>r.checkIn===tod()&&(r.statut==="confirmée"||r.statut==="en attente"));
+  const dep=Object.values(REZ).filter(r=>r.checkOut===tod()&&r.statut==="check-in");
+  const arrD=Object.values(REZ).filter(r=>r.checkIn===dem&&(r.statut==="confirmée"||r.statut==="en attente"));
+  let ah="";
+  if(arr.length) ah+=`<div class="alerte ag"><h4>✈️ Arrivées aujourd'hui (${arr.length})</h4>${arr.map(r=>`<p>• Ch.${r.chambre} — ${r.client}</p>`).join("")}</div>`;
+  if(dep.length) ah+=`<div class="alerte ar"><h4>🚪 Départs aujourd'hui (${dep.length})</h4>${dep.map(r=>`<p>• Ch.${r.chambre} — ${r.client}</p>`).join("")}</div>`;
+  if(arrD.length) ah+=`<div class="alerte ay"><h4>📅 Arrivées demain (${arrD.length})</h4>${arrD.map(r=>`<p>• Ch.${r.chambre} — ${r.client}</p>`).join("")}</div>`;
+  document.getElementById("rezalerts").innerHTML=ah;
+
+  const list=Object.values(REZ).filter(r=>{
+    const mf=rF==="tous"||r.statut===rF;
+    const ms=!rS||r.client?.toLowerCase().includes(rS.toLowerCase())||String(r.chambre).includes(rS);
+    return mf&&ms;
+  }).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+
+  document.getElementById("rezlist").innerHTML=list.length===0
+    ?`<div style="text-align:center;color:#9ca3af;padding:40px">Aucune réservation</div>`
+    :list.map(r=>`<div class="card" onclick="openRezDetail('${r.id}')" style="cursor:pointer">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div><span style="font-weight:800;font-size:16px">Ch. ${r.chambre}</span><span style="margin:0 8px;color:#d1d5db">|</span><span style="font-weight:700">${r.client}</span></div>
+        ${bdg(r.statut)}
+      </div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:4px">📅 ${fmtD(r.checkIn)} → ${fmtD(r.checkOut)} · ${r.nuits} nuit${r.nuits>1?"s":""}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#6b7280">${r.source||""}</span>
+        <span style="font-weight:800;color:#059669;font-size:14px">${fmt(r.montantTotal||0)}</span>
+      </div>
+      ${(parseInt(r.acompte)||0)>0?`<div style="font-size:11px;color:#6b7280;margin-top:3px">Acompte: ${fmt(r.acompte)} · Reste: ${fmt((r.montantTotal||0)-(parseInt(r.acompte)||0))}</div>`:""}
+    </div>`).join("");
+}
+
+window.openRezForm = (id=null) => {
+  editRezId=id;
+  const r=id?REZ[id]:null;
+  openModal(id?`Modifier — ${r.client}`:"Nouvelle réservation",`
+    <div class="fg"><label>Nom du client *</label><input id="rf-cl" value="${r?.client||""}" placeholder="Prénom NOM"/></div>
+    <div class="frow">
+      <div class="fg"><label>Téléphone</label><input id="rf-tel" value="${r?.tel||""}" placeholder="+237..."/></div>
+      <div class="fg"><label>Email</label><input id="rf-email" value="${r?.email||""}" placeholder="optionnel"/></div>
+      <div class="fg"><label>Arrivée *</label><input type="date" id="rf-in" value="${r?.checkIn||tod()}" onchange="refChSel()"/></div>
+      <div class="fg"><label>Départ *</label><input type="date" id="rf-out" value="${r?.checkOut||addD(tod(),1)}" onchange="refChSel()"/></div>
+    </div>
+    <div class="fg">
+      <label>Chambre * <span id="chdlbl" style="font-weight:400;text-transform:none;font-size:11px"></span></label>
+      <input type="hidden" id="rf-ch" value="${r?.chambre||""}"/>
+      <div class="chsg" id="chsg"></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label>Source</label><select id="rf-src">${opt(SRC,r?.source||SRC[0])}</select></div>
+      <div class="fg"><label>Statut</label><select id="rf-st">${opt(["confirmée","en attente","annulée"],r?.statut||"confirmée")}</select></div>
+      <div class="fg"><label>Par</label><select id="rf-emp">${opt(EMP,r?.employe||EMP[0])}</select></div>
+      <div class="fg"><label>Acompte (F)</label><input type="number" id="rf-ac" value="${r?.acompte||""}" placeholder="0" oninput="upRezRecap()"/></div>
+    </div>
+    <div class="fg"><label>Notes</label><input id="rf-notes" value="${r?.notes||""}" placeholder="Demandes spéciales..."/></div>
+    <div id="rezrecap"></div>
+    <button class="btn bgreen bfull" onclick="saveRez()">✅ ${id?"Mettre à jour":"Confirmer"}</button>
+  `);
+  refChSel();
+};
+
+window.selCh = (btn,num) => {
+  document.querySelectorAll(".chsb").forEach(b=>b.classList.remove("sel"));
+  btn.classList.add("sel");
+  document.getElementById("rf-ch").value=num;
+  upRezRecap();
+};
+window.refChSel = () => {
+  const ci=document.getElementById("rf-in")?.value||tod();
+  const co=document.getElementById("rf-out")?.value||addD(tod(),1);
+  const selN=document.getElementById("rf-ch")?.value;
+  const grid=document.getElementById("chsg");
+  if(!grid) return;
+  const dispos=CH_NUMS.filter(num=>{
+    const conf=Object.values(REZ).filter(r=>r.chambre===num&&r.statut!=="annulée"&&r.statut!=="check-out"&&r.id!==editRezId&&r.checkIn<co&&r.checkOut>ci);
+    return conf.length===0;
+  });
+  const lbl=document.getElementById("chdlbl");
+  if(lbl) lbl.textContent=`(${dispos.length} disponibles)`;
+  grid.innerHTML=CH_NUMS.map(num=>{
+    const ok=dispos.includes(num);
+    const sel=String(num)===String(selN);
+    return `<button class="chsb ${sel?"sel":""} ${!ok?"tk":""}" ${!ok?"disabled":""} onclick="selCh(this,'${num}')">
+      <div class="cn">${num}</div><div class="ct">${getType(num)}</div><div class="cp">${(getPrix(num)/1000).toFixed(0)}k</div>
+    </button>`;
+  }).join("");
+  upRezRecap();
+};
+window.upRezRecap = () => {
+  const num=document.getElementById("rf-ch")?.value;
+  const ci=document.getElementById("rf-in")?.value;
+  const co=document.getElementById("rf-out")?.value;
+  const el=document.getElementById("rezrecap");
+  if(!el||!num||!ci||!co) return;
+  const n=Math.max(1,diff(ci,co));
+  const tot=getPrix(parseInt(num))*n;
+  const ac=parseInt(document.getElementById("rf-ac")?.value)||0;
+  el.innerHTML=`<div class="recap" style="margin-bottom:12px">
+    <div class="rr"><span>${n} nuit${n>1?"s":""} × ${fmt(getPrix(parseInt(num)))}</span><strong style="color:#059669;font-size:15px">${fmt(tot)}</strong></div>
+    ${ac>0?`<div class="rr"><span style="font-weight:700">Reste à payer</span><strong style="color:#dc2626;font-size:15px">${fmt(tot-ac)}</strong></div>`:""}
+  </div>`;
+};
+window.saveRez = async () => {
+  const cl=document.getElementById("rf-cl")?.value?.trim();
+  const ch=parseInt(document.getElementById("rf-ch")?.value);
+  const ci=document.getElementById("rf-in")?.value;
+  const co=document.getElementById("rf-out")?.value;
+  if(!cl||!ch||!ci||!co){alert("Remplis les champs obligatoires.");return;}
+  if(new Date(co)<=new Date(ci)){alert("La date de départ doit être après l'arrivée.");return;}
+  const nuits=Math.max(1,diff(ci,co));
+  const montantTotal=getPrix(ch)*nuits;
+  const ac=document.getElementById("rf-ac")?.value||"";
+  const data={client:cl,chambre:ch,checkIn:ci,checkOut:co,
+    tel:document.getElementById("rf-tel")?.value||"",
+    email:document.getElementById("rf-email")?.value||"",
+    source:document.getElementById("rf-src")?.value||SRC[0],
+    statut:document.getElementById("rf-st")?.value||"confirmée",
+    employe:document.getElementById("rf-emp")?.value||EMP[0],
+    notes:document.getElementById("rf-notes")?.value||"",
+    acompte:ac,nuits,montantTotal};
+  await saveRezDB(editRezId, data);
+  if(!editRezId && parseInt(ac)>0) await addTXDB({type:"Chambre",desc:`Acompte — Ch.${ch} · ${cl}`,montant:parseInt(ac),employe:data.employe,date:tod()});
+  closeModal();
+};
+window.openRezDetail = id => {
+  const r=REZ[id];if(!r) return;
+  const reste=(r.montantTotal||0)-(parseInt(r.acompte)||0);
+  openModal(`Ch.${r.chambre} — ${r.client}`,`
+    <div style="margin-bottom:14px">${bdg(r.statut)}</div>
+    ${[["📅 Arrivée",fmtD(r.checkIn)],["🚪 Départ",fmtD(r.checkOut)],["🌙 Durée",`${r.nuits} nuit(s)`],["📞 Tél.",r.tel||"—"],["🔗 Source",r.source||"—"],["👤 Par",r.employe||"—"],["💰 Total",fmt(r.montantTotal||0)],["✅ Acompte",fmt(parseInt(r.acompte)||0)],["🔴 Reste",fmt(reste<0?0:reste)]].map(([k,v])=>`<div class="dr"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join("")}
+    ${r.notes?`<div style="margin-top:10px;font-size:13px;color:#6b7280;background:#f9fafb;border-radius:8px;padding:10px">📝 ${r.notes}</div>`:""}
+    <div class="brow" style="margin-top:16px">
+      ${(r.statut==="confirmée"||r.statut==="en attente")?`<button class="btn bblue" onclick="doRCI('${id}')">✈️ Check-in</button>`:""}
+      ${r.statut==="check-in"?`<button class="btn bpurp" onclick="doRCO('${id}')">🚪 Check-out</button>`:""}
+      <button class="btn bor-dark" onclick="closeModal();openRezForm('${id}')">✏️ Modifier</button>
+      ${r.statut!=="annulée"&&r.statut!=="check-out"?`<button class="btn bor-red" onclick="annRez('${id}')">🗑 Annuler</button>`:""}
+    </div>
+  `);
+};
+window.doRCI = async id => {
+  const r=REZ[id];
+  await updateRezStatut(id,"check-in");
+  const reste=(r.montantTotal||0)-(parseInt(r.acompte)||0);
+  if(reste>0) await addTXDB({type:"Chambre",desc:`Ch.${r.chambre} — ${r.client} (${r.nuits} nuit${r.nuits>1?"s":""})`,montant:reste,employe:r.employe||EMP[0],date:tod()});
+  closeModal();
+};
+window.doRCO = async id => { await updateRezStatut(id,"check-out"); closeModal(); };
+window.annRez = async id => { if(!confirm("Annuler cette réservation ?")) return; await updateRezStatut(id,"annulée"); closeModal(); };
+
+// ── CALENDRIER ────────────────────────────────────────────────────
+window.calPrev = () => { calM--; if(calM<0){calM=11;calY--;} renderCal(); };
+window.calNext = () => { calM++; if(calM>11){calM=0;calY++;} renderCal(); };
+function renderCal() {
+  document.getElementById("caltitle").textContent=`${MOIS[calM]} ${calY}`;
+  const fd=new Date(calY,calM,1).getDay();
+  const days=new Date(calY,calM+1,0).getDate();
+  const rm={};
+  Object.values(REZ).filter(r=>r.statut!=="annulée").forEach(r=>{
+    let cur=r.checkIn;
+    while(cur<r.checkOut){
+      const d=new Date(cur+"T12:00:00");
+      if(d.getFullYear()===calY&&d.getMonth()===calM){const day=d.getDate();if(!rm[day])rm[day]=0;rm[day]++;}
+      cur=addD(cur,1);
+    }
+  });
+  const ts=tod(); const bl=fd===0?6:fd-1;
+  let h=["D","L","M","M","J","V","S"].map(j=>`<div class="cdlbl">${j}</div>`).join("");
+  for(let i=0;i<bl;i++) h+=`<div></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${calY}-${String(calM+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+    const it=ds===ts; const occ=rm[d]||0;
+    h+=`<div class="cday ${it?"tod":occ>0?"cocc":""}"><div class="dn">${d}</div>${occ>0?`<div class="do">${occ}ch.</div>`:""}</div>`;
+  }
+  document.getElementById("calgrid").innerHTML=h;
+}
+
+// ── BAR / RESTAURANT ──────────────────────────────────────────────
+function renderBar() {
+  const cats=["Tous",...new Set(MENU.map(m=>m.cat))];
+  document.getElementById("barcats").innerHTML=cats.map(c=>`<button class="fb ${c===barCat?"active":""}" onclick="setBC('${c}',this)">${c}</button>`).join("");
+  const items=barCat==="Tous"?MENU:MENU.filter(m=>m.cat===barCat);
+  document.getElementById("menugrid").innerHTML=items.map(item=>`
+    <div class="mitem" onclick="addCmd(${item.id})">
+      <div><div style="font-weight:600;font-size:13px">${item.nom}</div><div style="font-size:12px;color:#059669;font-weight:700">${fmt(item.prix)}</div></div>
+      <span class="plus">+</span>
+    </div>`).join("");
+  renderCmd();
+}
+window.setBC = (c,b) => { barCat=c; document.querySelectorAll("#barcats .fb").forEach(x=>x.classList.remove("active")); b.classList.add("active"); renderBar(); };
+window.addCmd = id => { const it=MENU.find(m=>m.id===id); const ex=CMD.find(c=>c.id===id); if(ex)ex.qte++;else CMD.push({...it,qte:1}); renderCmd(); };
+window.remCmd = id => { const ex=CMD.find(c=>c.id===id); if(!ex)return; ex.qte--; if(ex.qte<=0)CMD=CMD.filter(c=>c.id!==id); renderCmd(); };
+function renderCmd() {
+  const box=document.getElementById("cmdbox");
+  if(!CMD.length){box.classList.add("hide");return;}
+  box.classList.remove("hide");
+  const tot=CMD.reduce((s,c)=>s+c.prix*c.qte,0);
+  document.getElementById("cmditems").innerHTML=CMD.map(c=>`
+    <div class="cmdrow"><span style="font-size:13px">${c.nom}</span>
+    <div class="cmdctl"><button class="cmdbtn" onclick="remCmd(${c.id})">−</button>
+    <span style="font-weight:700;min-width:16px;text-align:center">${c.qte}</span>
+    <button class="cmdbtn" onclick="addCmd(${c.id})">+</button>
+    <span style="font-size:13px;font-weight:700;color:#5b21b6;min-width:65px;text-align:right">${fmt(c.prix*c.qte)}</span></div></div>`).join("");
+  document.getElementById("cmdtotamt").textContent=fmt(tot);
+}
+window.validerCmd = async () => {
+  if(!CMD.length) return;
+  const table=document.getElementById("bartable").value;
+  const emp=document.getElementById("baremp").value;
+  const tot=CMD.reduce((s,c)=>s+c.prix*c.qte,0);
+  await addTXDB({type:"Restaurant",desc:`${table?table+" — ":""}${CMD.map(c=>`${c.nom}×${c.qte}`).join(", ")}`,montant:tot,employe:emp,date:tod()});
+  const h=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+  HISTO.unshift({table,items:[...CMD],total:tot,heure:h}); if(HISTO.length>10)HISTO.pop();
+  CMD=[]; document.getElementById("bartable").value=""; renderCmd();
+  document.getElementById("barhisto").innerHTML=`<h4 style="color:#374151;margin-bottom:8px;margin-top:4px">Commandes du jour</h4>`+HISTO.map(x=>`
+    <div class="card"><div style="display:flex;justify-content:space-between">
+    <span style="font-weight:600;font-size:13px">${x.table||"Comptoir"} · ${x.heure}</span>
+    <span style="font-weight:800;color:#059669">${fmt(x.total)}</span></div>
+    <div style="font-size:11px;color:#6b7280;margin-top:3px">${x.items.map(i=>`${i.nom}×${i.qte}`).join(", ")}</div></div>`).join("");
+};
+
+// ── CAISSE ────────────────────────────────────────────────────────
+function renderCaisse() {
+  const ts=tod(); const ms=ts.slice(0,7);
+  const txArr=Object.values(TX);
+  const ttx=txArr.filter(t=>t.date===ts);
+  const tj=ttx.reduce((s,t)=>s+t.montant,0);
+  const tm=txArr.filter(t=>t.date?.startsWith(ms)).reduce((s,t)=>s+t.montant,0);
+  document.getElementById("cjour").textContent=fmt(tj);
+  document.getElementById("cjournb").textContent=`${ttx.length} transaction(s)`;
+  document.getElementById("cmois").textContent=fmt(tm);
+  const bt=["Chambre","Restaurant","Bar","Divers"].map(tp=>({tp,total:txArr.filter(t=>t.type===tp&&t.date?.startsWith(ms)).reduce((s,t)=>s+t.montant,0)})).filter(x=>x.total>0);
+  document.getElementById("tchips").innerHTML=bt.map(({tp,total})=>`<div class="tchip" style="background:${TC[tp]||'#f3f4f6'}"><div class="tl">${tp}</div><div class="tv">${fmt(total)}</div></div>`).join("");
+  document.getElementById("txlist").innerHTML=txArr.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,60).map(t=>`
+    <div class="txrow" style="background:${TC[t.type]||'#f9fafb'}">
+      <div><div class="td">${t.desc}</div><div class="tm">${t.type} · ${t.employe} · ${fmtD(t.date)}</div></div>
+      <div class="ta">${fmt(t.montant)}</div>
+    </div>`).join("");
+}
+window.openCaisseForm = () => {
+  openModal("Nouvelle recette",`
+    <div class="fg"><label>Type</label><select id="cf-t">${opt(["Chambre","Restaurant","Bar","Divers"])}</select></div>
+    <div class="fg"><label>Description *</label><input id="cf-d" placeholder="ex: Table 3 — déjeuner"/></div>
+    <div class="fg"><label>Montant (F) *</label><input type="number" id="cf-m" placeholder="0"/></div>
+    <div class="fg"><label>Encaissé par</label><select id="cf-e">${opt(EMP)}</select></div>
+    <div class="fg"><label>Date</label><input type="date" id="cf-dt" value="${tod()}"/></div>
+    <button class="btn bgreen bfull" onclick="saveCaisse()">✅ Enregistrer</button>
+  `);
+};
+window.saveCaisse = async () => {
+  const d=document.getElementById("cf-d")?.value?.trim();
+  const m=parseInt(document.getElementById("cf-m")?.value);
+  if(!d||!m){alert("Remplis les champs obligatoires.");return;}
+  await addTXDB({type:document.getElementById("cf-t")?.value||"Divers",desc:d,montant:m,employe:document.getElementById("cf-e")?.value||EMP[0],date:document.getElementById("cf-dt")?.value||tod()});
+  closeModal();
+};
+
+// ── CLIENTS ───────────────────────────────────────────────────────
+window.filterCl = v => { clS=v; renderClients(); };
+function renderClients() {
+  const map={};
+  [...Object.values(TX).filter(t=>t.type==="Chambre"),...Object.values(REZ)].forEach(r=>{
+    const nom=r.client||r.desc?.split("—")[1]?.split("(")[0]?.trim();
+    if(!nom) return;
+    if(!map[nom]) map[nom]={nom,sejours:0,total:0,tel:"",actif:false};
+    map[nom].sejours++; map[nom].total+=(r.montantTotal||r.montant||0);
+    if(r.statut==="check-in") map[nom].actif=true;
+    if(r.tel&&!map[nom].tel) map[nom].tel=r.tel;
+  });
+  const list=Object.values(map).filter(c=>c.nom?.toLowerCase().includes((clS||"").toLowerCase())).sort((a,b)=>b.total-a.total);
+  document.getElementById("cllist").innerHTML=list.length===0
+    ?`<div style="text-align:center;color:#9ca3af;padding:40px">Aucun client</div>`
+    :list.map(c=>`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-weight:700;font-size:15px">👤 ${c.nom}</div>
+      <div style="font-size:12px;color:#6b7280;margin-top:3px">${c.sejours} séjour${c.sejours>1?"s":""}${c.tel?` · 📞 ${c.tel}`:""}${c.actif?` <span style="background:#d1fae5;color:#065f46;padding:1px 8px;border-radius:10px;font-size:11px">En séjour</span>`:""}</div>
+      </div><div style="font-weight:800;color:#059669;font-size:15px">${fmt(c.total)}</div>
+    </div></div>`).join("");
+}
+
+// ── STOCK ─────────────────────────────────────────────────────────
+function renderStk() {
+  const al=Object.values(STK).filter(s=>s.qte<=s.seuil);
+  document.getElementById("stkalerts").innerHTML=al.length?`<div class="alerte acr" style="margin-bottom:14px"><h4>🚨 Stock bas (${al.length})</h4>${al.map(s=>`<p>• ${s.nom}: <strong>${s.qte} ${s.unite}</strong></p>`).join("")}</div>`:"";
+  document.getElementById("stklist").innerHTML=Object.values(STK).map(s=>{
+    const pct=Math.min(100,(s.qte/Math.max(s.seuil*3,1))*100); const bas=s.qte<=s.seuil;
+    return `<div class="card" onclick="openStkEdit('${s.id}')" style="cursor:pointer;${bas?"border-color:#fecdd3;background:#fff1f2":""}">
+      <div style="display:flex;justify-content:space-between;margin-bottom:7px">
+        <span style="font-weight:600;font-size:14px">${s.nom}</span>
+        <span style="font-weight:800;font-size:14px;color:${bas?"#be123c":"#059669"}">${s.qte} ${s.unite}</span>
+      </div>
+      <div class="sbar"><div class="sfill" style="width:${pct}%;background:${bas?"#ef4444":"#22c55e"}"></div></div>
+      <div style="font-size:11px;color:#9ca3af;margin-top:2px">Seuil: ${s.seuil} ${s.unite}</div>
+    </div>`;
+  }).join("");
+}
+window.openStockForm = () => {
+  editStkId=null;
+  openModal("Nouvel article",`
+    <div class="fg"><label>Nom *</label><input id="sf-n" placeholder="ex: Savon de bain"/></div>
+    <div class="frow">
+      <div class="fg"><label>Quantité</label><input type="number" id="sf-q" value="0"/></div>
+      <div class="fg"><label>Seuil d'alerte</label><input type="number" id="sf-s" value="0"/></div>
+    </div>
+    <div class="fg"><label>Unité</label><input id="sf-u" value="pcs" placeholder="pcs, kg, L..."/></div>
+    <button class="btn bdark bfull" onclick="saveStk()">✅ Enregistrer</button>
+  `);
+};
+window.openStkEdit = id => {
+  editStkId=id; const s=STK[id];
+  openModal(`Modifier — ${s.nom}`,`
+    <div class="fg"><label>Nom</label><input id="sf-n" value="${s.nom}"/></div>
+    <div class="frow">
+      <div class="fg"><label>Quantité</label><input type="number" id="sf-q" value="${s.qte}"/></div>
+      <div class="fg"><label>Seuil d'alerte</label><input type="number" id="sf-s" value="${s.seuil}"/></div>
+    </div>
+    <div class="fg"><label>Unité</label><input id="sf-u" value="${s.unite}"/></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn bdark bfull" onclick="saveStk()">✅ Enregistrer</button>
+      <button class="btn bor-red" onclick="delStk('${id}')">🗑</button>
+    </div>
+  `);
+};
+window.saveStk = async () => {
+  const nom=document.getElementById("sf-n")?.value?.trim();
+  if(!nom){alert("Entre un nom.");return;}
+  const obj={nom,qte:parseInt(document.getElementById("sf-q")?.value)||0,seuil:parseInt(document.getElementById("sf-s")?.value)||0,unite:document.getElementById("sf-u")?.value||"pcs"};
+  await saveStkDB(editStkId, obj);
+  closeModal();
+};
+window.delStk = async id => { if(!confirm("Supprimer cet article ?")) return; await delStkDB(id); closeModal(); };
+
+// ── MODAL ─────────────────────────────────────────────────────────
+window.openModal = (title,body) => {
+  document.getElementById("mtitle").textContent=title;
+  document.getElementById("mbody").innerHTML=body;
+  document.getElementById("mbg").classList.add("open");
+};
+window.closeModal = () => document.getElementById("mbg").classList.remove("open");
+window.closeMBG = e => { if(e.target===document.getElementById("mbg")) closeModal(); };
+
+// ── INIT ──────────────────────────────────────────────────────────
+document.getElementById("hdate").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
+document.getElementById("baremp").innerHTML=opt(EMP);
+renderBar();
+startListeners();
+setSyncBar("ok");
+
+</script>
+</body>
+</html>
+ENDOFFILE
+echo "done"
+
