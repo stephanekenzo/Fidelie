@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
 <meta name="theme-color" content="#1a1a2e"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="Fidelie"/>
 <title>Fidelie Hotel</title>
 <style>
@@ -51,7 +52,6 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
 .bpurp{background:#7c3aed;color:#fff;border-color:#7c3aed}
 .bwhats{background:#25D366;color:#fff;border-color:#25D366}
 .borange{background:#ea580c;color:#fff;border-color:#ea580c}
-.bgold{background:#c9a227;color:#fff;border-color:#c9a227}
 .bor-dark{background:transparent;color:#1a1a2e;border-color:#1a1a2e}
 .bor-red{background:transparent;color:#dc2626;border-color:#dc2626}
 .bor-yel{background:transparent;color:#f59e0b;border-color:#f59e0b}
@@ -78,7 +78,7 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
 .alerte h4{font-size:13px;font-weight:700;margin-bottom:6px}.alerte p{font-size:12px}
 .ccards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .ccard{border-radius:14px;padding:14px;color:#fff}
-.cc2{background:linear-gradient(135deg,#065f46,#047857)}
+.cc1{background:linear-gradient(135deg,#1a1a2e,#16213e)}.cc2{background:linear-gradient(135deg,#065f46,#047857)}
 .cc3{background:linear-gradient(135deg,#dc2626,#b91c1c)}.cc4{background:linear-gradient(135deg,#7c3aed,#6d28d9)}
 .ccard small{font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:1px}
 .ccard .amt{font-size:18px;font-weight:800;margin-top:4px}.ccard .sub{font-size:10px;opacity:.5;margin-top:2px}
@@ -117,7 +117,9 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
 .loading{text-align:center;padding:40px;color:#9ca3af}
 .whats-msg{width:100%;border:1.5px solid #bbf7d0;border-radius:8px;padding:9px;font-size:13px;min-height:80px;outline:none;background:#fff;resize:vertical}
 .badge-prio{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
-.prio-haute{background:#fee2e2;color:#991b1b}.prio-moyenne{background:#fef3c7;color:#92400e}.prio-basse{background:#d1fae5;color:#065f46}
+.prio-haute{background:#fee2e2;color:#991b1b}
+.prio-moyenne{background:#fef3c7;color:#92400e}
+.prio-basse{background:#d1fae5;color:#065f46}
 .solde-box{border-radius:14px;padding:16px;color:#fff;margin-bottom:14px;background:linear-gradient(135deg,#1a1a2e,#0f3460)}
 .solde-box .s-lbl{font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:1px}
 .solde-box .s-val{font-size:28px;font-weight:800;margin:4px 0}
@@ -128,7 +130,8 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
 .rapport-title{font-size:15px;font-weight:800;color:#1a1a2e;margin-bottom:4px}
 .rapport-desc{font-size:12px;color:#6b7280}
 .rapport-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.cl-card{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer}
+/* CLIENT */
+.cl-card{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:background .15s}
 .cl-card:active{background:#f9fafb}
 .cl-header{background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:14px;padding:18px;color:#fff;margin-bottom:16px}
 .cl-badge{display:inline-block;background:rgba(255,255,255,.2);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:6px}
@@ -145,7 +148,9 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
 </style>
 </head>
 <body>
+
 <div id="syncbar">Connexion...</div>
+
 <div id="header">
   <small>Fidelie Hotel - Kribi</small>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
@@ -156,184 +161,186 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
     </div>
   </div>
 </div>
+
 <div id="tabs">
-  <button class="tab-btn active" onclick="goTab('chambres')" id="tb-chambres">&#127. <br>Chambres</button>
-  <button class="tab-btn" onclick="goTab('reservations')" id="tb-reservations">&#128203;<br>Reserv.<span class="tbadge hide" id="bdgrez">0</span></button>
-  <button class="tab-btn" onclick="goTab('bar')" id="tb-bar">&#127. <br>Bar</button>
-  <button class="tab-btn" onclick="goTab('caisse')" id="tb-caisse">&#128. <br>Caisse</button>
-  <button class="tab-btn" onclick="goTab('depenses')" id="tb-depenses">&#128. <br>Depenses</button>
-  <button class="tab-btn" onclick="goTab('maintenance')" id="tb-maintenance">&#128. <br>Maint.<span class="tbadge hide" id="bdgmaint">0</span></button>
-  <button class="tab-btn" onclick="goTab('clients')" id="tb-clients">&#128. <br>Clients</button>
-  <button class="tab-btn" onclick="goTab('stock')" id="tb-stock">&#128. <br>Stock<span class="tbadge hide" id="bdgstk">0</span></button>
-  <button class="tab-btn" onclick="goTab('rapports')" id="tb-rapports">&#128. <br>Rapports</button>
+  <button class="tab-btn active" onclick="goTab('chambres')" id="tb-chambres">🛏️<br>Chambres</button>
+  <button class="tab-btn" onclick="goTab('reservations')" id="tb-reservations">📋<br>Reserv.<span class="tbadge hide" id="bdgrez">0</span></button>
+  <button class="tab-btn" onclick="goTab('bar')" id="tb-bar">🍽️<br>Bar</button>
+  <button class="tab-btn" onclick="goTab('caisse')" id="tb-caisse">💰<br>Caisse</button>
+  <button class="tab-btn" onclick="goTab('depenses')" id="tb-depenses">💸<br>Depenses</button>
+  <button class="tab-btn" onclick="goTab('maintenance')" id="tb-maintenance">🔧<br>Maint.<span class="tbadge hide" id="bdgmaint">0</span></button>
+  <button class="tab-btn" onclick="goTab('clients')" id="tb-clients">👥<br>Clients</button>
+  <button class="tab-btn" onclick="goTab('stock')" id="tb-stock">📦<br>Stock<span class="tbadge hide" id="bdgstk">0</span></button>
+  <button class="tab-btn" onclick="goTab('rapports')" id="tb-rapports">📊<br>Rapports</button>
 </div>
+
 <div id="content">
 
-<!-- CHAMBRES -->
-<div class="page active" id="page-chambres">
-  <div class="stats">
-    <div class="stat" style="background:#d1fae5"><div class="val" style="color:#065f46" id="slibres">-</div><div class="lbl" style="color:#065f46">Libres</div></div>
-    <div class="stat" style="background:#fee2e2"><div class="val" style="color:#991b1b" id="socc">-</div><div class="lbl" style="color:#991b1b">Occupees</div></div>
-    <div class="stat" style="background:#ede9fe"><div class="val" style="color:#5b21b6">27</div><div class="lbl" style="color:#5b21b6">Total</div></div>
+  <!-- CHAMBRES -->
+  <div class="page active" id="page-chambres">
+    <div class="stats">
+      <div class="stat" style="background:#d1fae5"><div class="val" style="color:#065f46" id="slibres">-</div><div class="lbl" style="color:#065f46">Libres</div></div>
+      <div class="stat" style="background:#fee2e2"><div class="val" style="color:#991b1b" id="socc">-</div><div class="lbl" style="color:#991b1b">Occupees</div></div>
+      <div class="stat" style="background:#ede9fe"><div class="val" style="color:#5b21b6">27</div><div class="lbl" style="color:#5b21b6">Total</div></div>
+    </div>
+    <div class="filtres" id="chfiltres">
+      <button class="fb active" onclick="setCF('tous',this)">Toutes</button>
+      <button class="fb" onclick="setCF('libre',this)">Libre</button>
+      <button class="fb" onclick="setCF('occupee',this)">Occupee</button>
+      <button class="fb" onclick="setCF('maintenance',this)">Maintenance</button>
+    </div>
+    <div class="ch-grid" id="chgrid"><div class="loading">Connexion Firebase...</div></div>
   </div>
-  <div class="filtres" id="chfiltres">
-    <button class="fb active" onclick="setCF('tous',this)">Toutes</button>
-    <button class="fb" onclick="setCF('libre',this)">Libre</button>
-    <button class="fb" onclick="setCF('occupee',this)">Occupee</button>
-    <button class="fb" onclick="setCF('maintenance',this)">Maintenance</button>
-  </div>
-  <div class="ch-grid" id="chgrid"><div class="loading">Connexion Firebase...</div></div>
-</div>
 
-<!-- RESERVATIONS -->
-<div class="page" id="page-reservations">
-  <div id="rezalerts"></div>
-  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-    <button class="btn bgreen" onclick="openRezForm(null,null)">+ Nouvelle</button>
-    <div style="margin-left:auto;display:flex;gap:4px">
-      <button class="btn bdark bsm" id="vbl" onclick="setRV('liste')">Liste</button>
-      <button class="btn bor-dark bsm" id="vbc" onclick="setRV('cal')">Calendrier</button>
+  <!-- RESERVATIONS -->
+  <div class="page" id="page-reservations">
+    <div id="rezalerts"></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+      <button class="btn bgreen" onclick="openRezForm(null,null)">+ Nouvelle</button>
+      <div style="margin-left:auto;display:flex;gap:4px">
+        <button class="btn bdark bsm" id="vbl" onclick="setRV('liste')">📋</button>
+        <button class="btn bor-dark bsm" id="vbc" onclick="setRV('cal')">📆</button>
+      </div>
+    </div>
+    <div id="rezliste">
+      <input class="sinput" placeholder="Chercher client ou chambre..." oninput="filterRez(this.value)"/>
+      <div class="filtres" id="rezfiltres">
+        <button class="fb active" onclick="setRF('tous',this)">Tous</button>
+        <button class="fb" onclick="setRF('confirmee',this)">Confirmee</button>
+        <button class="fb" onclick="setRF('en attente',this)">En attente</button>
+        <button class="fb" onclick="setRF('check-in',this)">Check-in</button>
+        <button class="fb" onclick="setRF('check-out',this)">Check-out</button>
+        <button class="fb" onclick="setRF('annulee',this)">Annulee</button>
+      </div>
+      <div id="rezlist"><div class="loading">Chargement...</div></div>
+    </div>
+    <div id="rezcal" class="hide">
+      <div class="calnav"><button onclick="calPrev()">&#8249;</button><strong id="caltitle"></strong><button onclick="calNext()">&#8250;</button></div>
+      <div class="calgrid" id="calgrid"></div>
     </div>
   </div>
-  <div id="rezliste">
-    <input class="sinput" placeholder="Chercher client ou chambre..." oninput="filterRez(this.value)"/>
-    <div class="filtres" id="rezfiltres">
-      <button class="fb active" onclick="setRF('tous',this)">Tous</button>
-      <button class="fb" onclick="setRF('confirmee',this)">Confirmee</button>
-      <button class="fb" onclick="setRF('en attente',this)">En attente</button>
-      <button class="fb" onclick="setRF('check-in',this)">Check-in</button>
-      <button class="fb" onclick="setRF('check-out',this)">Check-out</button>
-      <button class="fb" onclick="setRF('annulee',this)">Annulee</button>
+
+  <!-- BAR -->
+  <div class="page" id="page-bar">
+    <div class="frow" style="margin-bottom:12px">
+      <div class="fg"><label>Table / Client</label><input id="bartable" placeholder="Table 3..."/></div>
+      <div class="fg"><label>Serveur</label><select id="baremp"></select></div>
     </div>
-    <div id="rezlist"><div class="loading">Chargement...</div></div>
-  </div>
-  <div id="rezcal" class="hide">
-    <div class="calnav"><button onclick="calPrev()">&#8249;</button><strong id="caltitle"></strong><button onclick="calNext()">&#8250;</button></div>
-    <div class="calgrid" id="calgrid"></div>
-  </div>
-</div>
-
-<!-- BAR -->
-<div class="page" id="page-bar">
-  <div class="frow" style="margin-bottom:12px">
-    <div class="fg"><label>Table / Client</label><input id="bartable" placeholder="Table 3..."/></div>
-    <div class="fg"><label>Serveur</label><select id="baremp"></select></div>
-  </div>
-  <div class="filtres" id="barcats"></div>
-  <div class="mgrid" id="menugrid"></div>
-  <div id="cmdbox" class="hide">
-    <div class="cmdbox">
-      <div style="font-weight:700;color:#5b21b6;margin-bottom:10px">Commande en cours</div>
-      <div id="cmditems"></div>
-      <div class="cmdtot"><span>TOTAL</span><span id="cmdtotamt" style="color:#059669"></span></div>
-      <button class="btn bgreen bfull" style="margin-top:10px" onclick="validerCmd()">Valider et Encaisser</button>
+    <div class="filtres" id="barcats"></div>
+    <div class="mgrid" id="menugrid"></div>
+    <div id="cmdbox" class="hide">
+      <div class="cmdbox">
+        <div style="font-weight:700;color:#5b21b6;margin-bottom:10px">Commande en cours</div>
+        <div id="cmditems"></div>
+        <div class="cmdtot"><span>TOTAL</span><span id="cmdtotamt" style="color:#059669"></span></div>
+        <button class="btn bgreen bfull" style="margin-top:10px" onclick="validerCmd()">Valider et Encaisser</button>
+      </div>
     </div>
+    <div id="barhisto"></div>
   </div>
-  <div id="barhisto"></div>
-</div>
 
-<!-- CAISSE -->
-<div class="page" id="page-caisse">
-  <div class="solde-box">
-    <div class="s-lbl">Solde du mois (Recettes - Depenses)</div>
-    <div class="s-val" id="csolde">0 F</div>
-  </div>
-  <div class="ccards">
-    <div class="ccard cc2"><small>Recettes aujourd'hui</small><div class="amt" id="cjour">0 F</div><div class="sub" id="cjournb">0 tx</div></div>
-    <div class="ccard cc2"><small>Recettes ce mois</small><div class="amt" id="cmois">0 F</div></div>
-    <div class="ccard cc3"><small>Depenses ce mois</small><div class="amt" id="cdep">0 F</div></div>
-    <div class="ccard cc4"><small>Bar/Resto ce mois</small><div class="amt" id="cbar">0 F</div></div>
-  </div>
-  <button class="btn bgreen bfull" style="margin-bottom:10px" onclick="openCaisseForm()">+ Ajouter recette</button>
-  <div id="txlist"><div class="loading">Chargement...</div></div>
-  <div class="reset-box">
-    <div style="font-weight:700;color:#be123c;margin-bottom:8px">Zone de reinitialisation</div>
-    <div style="font-size:12px;color:#6b7280;margin-bottom:10px">Supprimer toutes les transactions du mois actuel.</div>
-    <button class="btn bred bfull" onclick="reinitMois()">Reinitialiser le mois</button>
-  </div>
-</div>
-
-<!-- DEPENSES -->
-<div class="page" id="page-depenses">
-  <div class="ccard cc3" style="margin-bottom:14px"><small>Total depenses ce mois</small><div class="amt" id="dtotal">0 F</div></div>
-  <div class="filtres" id="depfiltres">
-    <button class="fb active" onclick="setDF('tous',this)">Toutes</button>
-    <button class="fb" onclick="setDF('Alimentation',this)">Alimentation</button>
-    <button class="fb" onclick="setDF('Personnel',this)">Personnel</button>
-    <button class="fb" onclick="setDF('Entretien',this)">Entretien</button>
-    <button class="fb" onclick="setDF('Fournisseurs',this)">Fournisseurs</button>
-    <button class="fb" onclick="setDF('Autre',this)">Autre</button>
-  </div>
-  <button class="btn bred bfull" style="margin-bottom:12px" onclick="openDepForm()">+ Nouvelle depense</button>
-  <div id="deplist"><div class="loading">Chargement...</div></div>
-</div>
-
-<!-- MAINTENANCE -->
-<div class="page" id="page-maintenance">
-  <div class="stats" style="grid-template-columns:1fr 1fr">
-    <div class="stat" style="background:#fef3c7"><div class="val" style="color:#92400e" id="mopen">0</div><div class="lbl" style="color:#92400e">En cours</div></div>
-    <div class="stat" style="background:#d1fae5"><div class="val" style="color:#065f46" id="mclosed">0</div><div class="lbl" style="color:#065f46">Resolues</div></div>
-  </div>
-  <button class="btn borange bfull" style="margin-bottom:12px" onclick="openMaintForm(null)">+ Nouveau ticket</button>
-  <div class="filtres" id="maintfiltres">
-    <button class="fb active" onclick="setMF('tous',this)">Tous</button>
-    <button class="fb" onclick="setMF('ouvert',this)">En cours</button>
-    <button class="fb" onclick="setMF('resolu',this)">Resolu</button>
-  </div>
-  <div id="maintlist"><div class="loading">Chargement...</div></div>
-</div>
-
-<!-- CLIENTS -->
-<div class="page" id="page-clients">
-  <input class="sinput" placeholder="Rechercher par nom, telephone, piece..." oninput="filterCl(this.value)" id="cl-search"/>
-  <div id="cllist"><div class="loading">Chargement...</div></div>
-</div>
-
-<!-- STOCK -->
-<div class="page" id="page-stock">
-  <div id="stkalerts"></div>
-  <button class="btn bdark bfull" style="margin-bottom:12px" onclick="openStockForm()">+ Nouvel article</button>
-  <div id="stklist"><div class="loading">Chargement...</div></div>
-</div>
-
-<!-- RAPPORTS -->
-<div class="page" id="page-rapports">
-  <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:14px;padding:16px;color:#fff;margin-bottom:16px">
-    <div style="font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:1px">Fidelie Hotel - Kribi</div>
-    <div style="font-size:18px;font-weight:800;margin-top:4px">Rapports</div>
-    <div style="font-size:12px;opacity:.7;margin-top:4px">Generer et envoyer par WhatsApp</div>
-  </div>
-  <div class="fg"><label>Periode</label>
-    <select id="rap-periode" onchange="updateRapPeriode()">
-      <option value="mois">Ce mois</option>
-      <option value="semaine">Cette semaine</option>
-      <option value="jour">Aujourd'hui</option>
-      <option value="custom">Periode personnalisee</option>
-    </select>
-  </div>
-  <div id="rap-custom" class="hide">
-    <div class="frow">
-      <div class="fg"><label>Du</label><input type="date" id="rap-du"/></div>
-      <div class="fg"><label>Au</label><input type="date" id="rap-au"/></div>
+  <!-- CAISSE -->
+  <div class="page" id="page-caisse">
+    <div class="solde-box">
+      <div class="s-lbl">Solde du mois (Recettes - Depenses)</div>
+      <div class="s-val" id="csolde">0 F</div>
+    </div>
+    <div class="ccards">
+      <div class="ccard cc2"><small>Recettes aujourd'hui</small><div class="amt" id="cjour">0 F</div><div class="sub" id="cjournb">0 tx</div></div>
+      <div class="ccard cc2"><small>Recettes ce mois</small><div class="amt" id="cmois">0 F</div></div>
+      <div class="ccard cc3"><small>Depenses ce mois</small><div class="amt" id="cdep">0 F</div></div>
+      <div class="ccard cc4"><small>Bar/Resto ce mois</small><div class="amt" id="cbar">0 F</div></div>
+    </div>
+    <button class="btn bgreen bfull" style="margin-bottom:10px" onclick="openCaisseForm()">+ Ajouter recette</button>
+    <div id="txlist"><div class="loading">Chargement...</div></div>
+    <div class="reset-box">
+      <div style="font-weight:700;color:#be123c;margin-bottom:8px">Zone de reinitialisation</div>
+      <div style="font-size:12px;color:#6b7280;margin-bottom:10px">Supprimer toutes les transactions du mois actuel.</div>
+      <button class="btn bred bfull" onclick="reinitMois()">Reinitialiser le mois</button>
     </div>
   </div>
-  <div class="rapport-grid">
-    <div class="rapport-card" onclick="genererRapport('synthese')"><div class="rapport-icon">&#128202;</div><div class="rapport-title">Synthese</div><div class="rapport-desc">Recettes, depenses, solde</div></div>
-    <div class="rapport-card" onclick="genererRapport('caisse')"><div class="rapport-icon">&#128176;</div><div class="rapport-title">Caisse</div><div class="rapport-desc">Toutes les recettes</div></div>
-    <div class="rapport-card" onclick="genererRapport('reservations')"><div class="rapport-icon">&#128203;</div><div class="rapport-title">Reservations</div><div class="rapport-desc">Sejours et check-ins</div></div>
-    <div class="rapport-card" onclick="genererRapport('chambres')"><div class="rapport-icon">&#127. </div><div class="rapport-title">Chambres</div><div class="rapport-desc">Etat et occupation</div></div>
-    <div class="rapport-card" onclick="genererRapport('depenses')"><div class="rapport-icon">&#128. </div><div class="rapport-title">Depenses</div><div class="rapport-desc">Toutes les sorties</div></div>
-    <div class="rapport-card" onclick="genererRapport('clients')"><div class="rapport-icon">&#128. </div><div class="rapport-title">Clients</div><div class="rapport-desc">Liste et historique</div></div>
-    <div class="rapport-card" onclick="genererRapport('maintenance')"><div class="rapport-icon">&#128. </div><div class="rapport-title">Maintenance</div><div class="rapport-desc">Tickets et couts</div></div>
-    <div class="rapport-card" onclick="genererRapport('stock')"><div class="rapport-icon">&#128. </div><div class="rapport-title">Stock</div><div class="rapport-desc">Inventaire et alertes</div></div>
-  </div>
-</div>
 
-</div><!-- end #content -->
+  <!-- DEPENSES -->
+  <div class="page" id="page-depenses">
+    <div class="ccard cc3" style="margin-bottom:14px"><small>Total depenses ce mois</small><div class="amt" id="dtotal">0 F</div></div>
+    <div class="filtres" id="depfiltres">
+      <button class="fb active" onclick="setDF('tous',this)">Toutes</button>
+      <button class="fb" onclick="setDF('Alimentation',this)">Alimentation</button>
+      <button class="fb" onclick="setDF('Personnel',this)">Personnel</button>
+      <button class="fb" onclick="setDF('Entretien',this)">Entretien</button>
+      <button class="fb" onclick="setDF('Fournisseurs',this)">Fournisseurs</button>
+      <button class="fb" onclick="setDF('Autre',this)">Autre</button>
+    </div>
+    <button class="btn bred bfull" style="margin-bottom:12px" onclick="openDepForm()">+ Nouvelle depense</button>
+    <div id="deplist"><div class="loading">Chargement...</div></div>
+  </div>
+
+  <!-- MAINTENANCE -->
+  <div class="page" id="page-maintenance">
+    <div class="stats" style="grid-template-columns:1fr 1fr">
+      <div class="stat" style="background:#fef3c7"><div class="val" style="color:#92400e" id="mopen">0</div><div class="lbl" style="color:#92400e">En cours</div></div>
+      <div class="stat" style="background:#d1fae5"><div class="val" style="color:#065f46" id="mclosed">0</div><div class="lbl" style="color:#065f46">Resolues</div></div>
+    </div>
+    <button class="btn borange bfull" style="margin-bottom:12px" onclick="openMaintForm(null)">+ Nouveau ticket</button>
+    <div class="filtres" id="maintfiltres">
+      <button class="fb active" onclick="setMF('tous',this)">Tous</button>
+      <button class="fb" onclick="setMF('ouvert',this)">En cours</button>
+      <button class="fb" onclick="setMF('resolu',this)">Resolu</button>
+    </div>
+    <div id="maintlist"><div class="loading">Chargement...</div></div>
+  </div>
+
+  <!-- CLIENTS -->
+  <div class="page" id="page-clients">
+    <input class="sinput" placeholder="🔍 Rechercher par nom, telephone, piece..." oninput="filterCl(this.value)" id="cl-search"/>
+    <div id="cllist"><div class="loading">Chargement...</div></div>
+  </div>
+
+  <!-- STOCK -->
+  <div class="page" id="page-stock">
+    <div id="stkalerts"></div>
+    <button class="btn bdark bfull" style="margin-bottom:12px" onclick="openStockForm()">+ Nouvel article</button>
+    <div id="stklist"><div class="loading">Chargement...</div></div>
+  </div>
+
+  <!-- RAPPORTS -->
+  <div class="page" id="page-rapports">
+    <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:14px;padding:16px;color:#fff;margin-bottom:16px">
+      <div style="font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:1px">Fidelie Hotel - Kribi</div>
+      <div style="font-size:18px;font-weight:800;margin-top:4px">Rapports</div>
+      <div style="font-size:12px;opacity:.7;margin-top:4px">Generer et envoyer par WhatsApp</div>
+    </div>
+    <div class="fg"><label>Periode du rapport</label>
+      <select id="rap-periode" onchange="updateRapPeriode()">
+        <option value="mois">Ce mois</option>
+        <option value="semaine">Cette semaine</option>
+        <option value="jour">Aujourd'hui</option>
+        <option value="custom">Periode personnalisee</option>
+      </select>
+    </div>
+    <div id="rap-custom" class="hide">
+      <div class="frow">
+        <div class="fg"><label>Du</label><input type="date" id="rap-du"/></div>
+        <div class="fg"><label>Au</label><input type="date" id="rap-au"/></div>
+      </div>
+    </div>
+    <div class="rapport-grid">
+      <div class="rapport-card" onclick="genererRapport('synthese')"><div class="rapport-icon">📊</div><div class="rapport-title">Synthese generale</div><div class="rapport-desc">Recettes, depenses, solde</div></div>
+      <div class="rapport-card" onclick="genererRapport('caisse')"><div class="rapport-icon">💰</div><div class="rapport-title">Caisse</div><div class="rapport-desc">Toutes les recettes</div></div>
+      <div class="rapport-card" onclick="genererRapport('reservations')"><div class="rapport-icon">📋</div><div class="rapport-title">Reservations</div><div class="rapport-desc">Sejours et check-ins</div></div>
+      <div class="rapport-card" onclick="genererRapport('chambres')"><div class="rapport-icon">🛏️</div><div class="rapport-title">Chambres</div><div class="rapport-desc">Etat et occupation</div></div>
+      <div class="rapport-card" onclick="genererRapport('depenses')"><div class="rapport-icon">💸</div><div class="rapport-title">Depenses</div><div class="rapport-desc">Toutes les sorties</div></div>
+      <div class="rapport-card" onclick="genererRapport('clients')"><div class="rapport-icon">👥</div><div class="rapport-title">Clients</div><div class="rapport-desc">Liste et historique</div></div>
+      <div class="rapport-card" onclick="genererRapport('maintenance')"><div class="rapport-icon">🔧</div><div class="rapport-title">Maintenance</div><div class="rapport-desc">Tickets et couts</div></div>
+      <div class="rapport-card" onclick="genererRapport('stock')"><div class="rapport-icon">📦</div><div class="rapport-title">Stock</div><div class="rapport-desc">Inventaire et alertes</div></div>
+    </div>
+  </div>
+
+</div>
 
 <div id="mbg" onclick="closeMBG(event)">
   <div id="modal">
-    <div id="mhdr"><h3 id="mtitle"></h3><button id="mcls" onclick="closeModal()">&#x2715;</button></div>
+    <div id="mhdr"><h3 id="mtitle"></h3><button id="mcls" onclick="closeModal()">x</button></div>
     <div id="mbody"></div>
   </div>
 </div>
@@ -347,11 +354,9 @@ firebase.initializeApp({
   projectId:"fidelie-hotel",
   storageBucket:"fidelie-hotel.firebasestorage.app",
   messagingSenderId:"697423263168",
-  appId:"1:697423263268:web:67e0297cd05c6a37ee0425"
+  appId:"1:697423263168:web:67e0297cd05c6a37ee0425"
 });
 var db=firebase.firestore();
-
-var LOGO_B64="data:image/png;base64,""" + LOGO + """";
 
 var CH_NUMS=Array.from({length:27},function(_,i){return 101+i;});
 var PRIX_DEF={117:45000,121:20000};
@@ -375,17 +380,16 @@ var STK_DEF=[
   {nom:"Eau de Javel",qte:15,seuil:3,unite:"L"},{nom:"Serviettes bain",qte:55,seuil:20,unite:"pcs"},
   {nom:"Draps",qte:40,seuil:15,unite:"jeux"},{nom:"Desinfectant",qte:8,seuil:2,unite:"L"}
 ];
+
 var CHAMBRES={},REZ={},TX={},DEP={},MAINT={},STK={},CLIENTS={};
 var CMD=[],HISTO=[];
 var cF="tous",rF="tous",dF="tous",mF="tous",rS="",clS="",barCat="Tous";
 var calY=new Date().getFullYear(),calM=new Date().getMonth();
 var editRezId=null,editStkId=null,editMaintId=null,rezView="liste";
-var facNumCounter=1;
 
 function fmt(n){return Number(n).toLocaleString("fr-FR")+" F";}
 function tod(){return new Date().toISOString().split("T")[0];}
-function fmtD(d){if(!d)return"--";return new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});}
-function fmtDLong(d){if(!d)return"--";return new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});}
+function fmtD(d){if(!d)return"—";return new Date(d+"T12:00:00").toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});}
 function diff(a,b){return Math.ceil((new Date(b)-new Date(a))/86400000);}
 function addD(d,n){var r=new Date(d+"T12:00:00");r.setDate(r.getDate()+n);return r.toISOString().split("T")[0];}
 function opt(a,s){s=s||"";return a.map(function(e){return "<option value='"+e+"'"+(e===s?" selected":"")+">"+e+"</option>";}).join("");}
@@ -405,7 +409,7 @@ function setSB(s){
   var b=document.getElementById("syncbar");
   if(s==="ok"){b.className="";b.textContent="Synchronise en temps reel";}
   else if(s==="off"){b.className="off";b.textContent="Hors ligne";}
-  else{b.className="err";b.textContent="Erreur connexion - Verifier Firebase Rules";}
+  else{b.className="err";b.textContent="Erreur connexion";}
 }
 window.addEventListener("online",function(){setSB("ok");});
 window.addEventListener("offline",function(){setSB("off");});
@@ -472,7 +476,9 @@ function upsertClient(nom,tel,ville,piece,montant){
   Object.values(CLIENTS).forEach(function(c){if(c.nom&&c.nom.toLowerCase()===nom.toLowerCase())existing=c;});
   if(existing){
     var upd={sejours:(existing.sejours||0)+1,totalDepense:(existing.totalDepense||0)+(montant||0),updatedAt:Date.now()};
-    if(tel)upd.tel=tel;if(ville)upd.ville=ville;if(piece)upd.piece=piece;
+    if(tel)upd.tel=tel;
+    if(ville)upd.ville=ville;
+    if(piece)upd.piece=piece;
     db.collection("clients").doc(existing.id).set(upd,{merge:true});
   } else {
     db.collection("clients").add({nom:nom,tel:tel||"",ville:ville||"",piece:piece||"",sejours:1,totalDepense:montant||0,createdAt:Date.now(),updatedAt:Date.now()});
@@ -501,7 +507,7 @@ function goTab(id){
   document.getElementById("tb-"+id).classList.add("active");
 }
 
-// CHAMBRES
+// ── CHAMBRES ──────────────────────────────────────────────────
 function setCF(f,b){cF=f;document.querySelectorAll("#chfiltres .fb").forEach(function(x){x.classList.remove("active");});b.classList.add("active");renderCH();}
 function renderCH(){
   var filtre=cF==="tous"?CH_NUMS:CH_NUMS.filter(function(n){return getSt(n)===cF;});
@@ -524,18 +530,18 @@ function renderCH(){
     html+="<div class='brow'>";
     if(st==="libre")html+="<button class='btn bgreen bsm' onclick='openCI("+num+",null)'>Check-in</button>";
     if(st==="occupee")html+="<button class='btn bred bsm' onclick='doCO("+num+")'>Check-out</button>";
-    html+="<button class='btn bor-yel bsm' onclick='togMaint("+num+")'>Maint.</button>";
+    html+="<button class='btn bor-yel bsm' onclick='togMaint("+num+")'>🔧</button>";
     html+="</div></div>";
     return html;
   }).join("");
 }
 
-function openCI(num,clientData){
+function openCI(num, clientData){
   var pd=getPD(num);
   var h="<div class='fsep'>Informations client</div>";
   h+="<div class='fg'><label>Nom complet *</label><input id='fci-cl' value='"+(clientData?clientData.nom||"":"")+"' placeholder='Prenom NOM'/></div>";
   h+="<div class='frow'><div class='fg'><label>Telephone</label><input id='fci-tel' value='"+(clientData?clientData.tel||"":"")+"' placeholder='+237...' type='tel'/></div><div class='fg'><label>Ville</label><input id='fci-ville' value='"+(clientData?clientData.ville||"":"")+"' placeholder='Yaounde'/></div></div>";
-  h+="<div class='fg'><label>Piece identite N&#176;</label><input id='fci-piece' value='"+(clientData?clientData.piece||"":"")+"' placeholder='CNI 123456'/></div>";
+  h+="<div class='fg'><label>Piece identite N°</label><input id='fci-piece' value='"+(clientData?clientData.piece||"":"")+"' placeholder='CNI 123456'/></div>";
   h+="<div class='fsep'>Sejour</div>";
   h+="<div class='frow'><div class='fg'><label>Arrivee *</label><input type='date' id='fci-in' value='"+tod()+"' onchange='upRecapCI("+num+")'/></div><div class='fg'><label>Depart *</label><input type='date' id='fci-out' value='"+addD(tod(),1)+"' onchange='upRecapCI("+num+")'/></div></div>";
   h+="<div class='fg'><label>Prix negocie par nuit (F)</label><input class='prix-input' type='number' id='fci-prix' value='"+pd+"' oninput='upRecapCI("+num+")'/><div style='font-size:11px;color:#6b7280;margin-top:4px'>Prix standard: "+fmt(pd)+"</div></div>";
@@ -543,6 +549,17 @@ function openCI(num,clientData){
   h+="<div id='rci'></div><button class='btn bgreen bfull' onclick='doCI("+num+")'>Confirmer le check-in</button>";
   openModal("Check-in Ch."+num,h);upRecapCI(num);
 }
+
+function openCIFromClient(clientId){
+  var c=CLIENTS[clientId];if(!c)return;
+  // Choisir chambre libre
+  var libres=CH_NUMS.filter(function(n){return getSt(n)==="libre";});
+  if(!libres.length){alert("Aucune chambre libre disponible.");return;}
+  closeModal();
+  // Ouvrir form check-in avec infos client pre-remplies
+  openCI(libres[0],c);
+}
+
 function upRecapCI(num){
   var ci=gv("fci-in"),co=gv("fci-out"),prix=gi("fci-prix")||getPD(num);
   if(!ci||!co)return;
@@ -577,7 +594,7 @@ function togMaint(num){
 }
 
 function envoyerMerci(client,tel,num){
-  var msg="Cher(e) "+client+",\\n\\nNous vous remercions d avoir sejourne au Fidelie Hotel de Kribi"+(num?" (Ch. "+num+")":"")+".\\n\\nVotre confort est notre priorite. Nous esperons vous revoir bientot !\\n\\n- L equipe Fidelie Hotel";
+  var msg="Cher(e) "+client+",\n\nNous vous remercions d'avoir sejourne au Fidelie Hotel de Kribi"+(num?" (Ch. "+num+")":"")+". \n\nVotre confort est notre priorite. Nous esperons vous revoir bientot !\n\n- L'equipe Fidelie Hotel";
   var h="<div class='fg'><label>Numero WhatsApp</label><input id='wt-tel' value='"+tel+"' placeholder='+237...'/></div>";
   h+="<div class='fg'><label>Message</label><textarea class='whats-msg' id='wt-msg'>"+msg+"</textarea></div>";
   h+="<button class='btn bwhats bfull' style='margin-top:8px' onclick='sendWhats()'>Envoyer via WhatsApp</button>";
@@ -585,12 +602,12 @@ function envoyerMerci(client,tel,num){
   openModal("Message de remerciement",h);
 }
 function sendWhats(){
-  var tel=gv("wt-tel").replace(/\\s+/g,"").replace(/^\\+/,"");
+  var tel=gv("wt-tel").replace(/\s+/g,"").replace(/^\+/,"");
   window.open("https://wa.me/"+tel+"?text="+encodeURIComponent(gv("wt-msg")),"_blank");
   closeModal();
 }
 
-// RESERVATIONS
+// ── RESERVATIONS ──────────────────────────────────────────────
 function setRV(v){
   rezView=v;
   document.getElementById("rezliste").classList.toggle("hide",v!=="liste");
@@ -620,7 +637,7 @@ function renderREZ(){
   if(!list.length){document.getElementById("rezlist").innerHTML="<div style='text-align:center;color:#9ca3af;padding:40px'>Aucune reservation</div>";return;}
   document.getElementById("rezlist").innerHTML=list.map(function(r){
     var ac=parseInt(r.acompte)||0;
-    return"<div class='card' onclick=\\"openRezDetail('"+r.id+"')\\" style='cursor:pointer'>"
+    return"<div class='card' onclick=\"openRezDetail('"+r.id+"')\" style='cursor:pointer'>"
       +"<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px'>"
       +"<div><span style='font-weight:800;font-size:15px'>Ch."+r.chambre+"</span> <span style='font-weight:700'>"+r.client+"</span></div>"
       +bdg(r.statut)+"</div>"
@@ -631,12 +648,13 @@ function renderREZ(){
   }).join("");
 }
 
-function openRezForm(id,clientData){
+// openRezForm accepte maintenant un client pre-rempli
+function openRezForm(id, clientData){
   editRezId=id;var r=id?REZ[id]:null;
   var h="<div class='fsep'>Informations client</div>";
   h+="<div class='fg'><label>Nom complet *</label><input id='rf-cl' value='"+(r?r.client||"":(clientData?clientData.nom||"":""))+"' placeholder='Prenom NOM'/></div>";
   h+="<div class='frow'><div class='fg'><label>Telephone</label><input id='rf-tel' value='"+(r?r.tel||"":(clientData?clientData.tel||"":""))+"' placeholder='+237...' type='tel'/></div><div class='fg'><label>Ville</label><input id='rf-ville' value='"+(r?r.ville||"":(clientData?clientData.ville||"":""))+"' placeholder='Douala'/></div></div>";
-  h+="<div class='fg'><label>Piece identite N&#176;</label><input id='rf-piece' value='"+(r?r.piece||"":(clientData?clientData.piece||"":""))+"' placeholder='CNI 123456'/></div>";
+  h+="<div class='fg'><label>Piece identite N°</label><input id='rf-piece' value='"+(r?r.piece||"":(clientData?clientData.piece||"":""))+"' placeholder='CNI 123456'/></div>";
   h+="<div class='fsep'>Sejour</div>";
   h+="<div class='frow'><div class='fg'><label>Arrivee *</label><input type='date' id='rf-in' value='"+(r?r.checkIn:tod())+"' onchange='refChSel()'/></div><div class='fg'><label>Depart *</label><input type='date' id='rf-out' value='"+(r?r.checkOut:addD(tod(),1))+"' onchange='refChSel()'/></div></div>";
   h+="<div class='fg'><label>Chambre * <span id='chdlbl' style='font-weight:400;text-transform:none;font-size:11px'></span></label><input type='hidden' id='rf-ch' value='"+(r?r.chambre||"":"")+"'/><div class='chsg' id='chsg'></div></div>";
@@ -645,9 +663,10 @@ function openRezForm(id,clientData){
   h+="<div class='fg'><label>Notes</label><input id='rf-notes' value='"+(r?r.notes||"":"")+"' placeholder='Demandes speciales...'/></div>";
   h+="<div id='rezrecap'></div>";
   h+="<button class='btn bgreen bfull' style='margin-bottom:8px' onclick='saveRez()'>"+(id?"Mettre a jour":"Confirmer")+"</button>";
-  if(id)h+="<button class='btn bor-red bfull' onclick='supprimerRez(\\""+id+"\\")'>Supprimer cette reservation</button>";
+  if(id)h+="<button class='btn bor-red bfull' onclick='supprimerRez(\""+id+"\")'>Supprimer cette reservation</button>";
   openModal(id?"Modifier - "+r.client:"Nouvelle reservation",h);refChSel();
 }
+
 function selCh(btn,num){document.querySelectorAll(".chsb").forEach(function(b){b.classList.remove("sel");});btn.classList.add("sel");document.getElementById("rf-ch").value=num;upRezRecap();}
 function refChSel(){
   var ci=gv("rf-in")||tod(),co=gv("rf-out")||addD(tod(),1),selN=gv("rf-ch");
@@ -659,7 +678,7 @@ function refChSel(){
   var lbl=document.getElementById("chdlbl");if(lbl)lbl.textContent="("+dispos.length+" disponibles)";
   grid.innerHTML=CH_NUMS.map(function(num){
     var ok=dispos.indexOf(num)>=0,sel=String(num)===String(selN);
-    return"<button class='chsb "+(sel?"sel ":"")+(ok?"":"tk")+"' "+(ok?"":'disabled')+" onclick=\\"selCh(this,'"+num+"')\\"><div class='cn'>"+num+"</div><div class='ct'>"+getTP(num)+"</div><div class='cp'>"+(getPD(num)/1000).toFixed(0)+"k</div></button>";
+    return"<button class='chsb "+(sel?"sel ":"")+(ok?"":"tk")+"' "+(ok?"":'disabled')+" onclick=\"selCh(this,'"+num+"')\"><div class='cn'>"+num+"</div><div class='ct'>"+getTP(num)+"</div><div class='cp'>"+(getPD(num)/1000).toFixed(0)+"k</div></button>";
   }).join("");
   upRezRecap();
 }
@@ -675,7 +694,7 @@ function upRezRecap(){
 function saveRez(){
   var cl=gv("rf-cl").trim(),ch=parseInt(gv("rf-ch")),ci=gv("rf-in"),co=gv("rf-out");
   if(!cl||!ch||!ci||!co){alert("Nom, chambre, arrivee et depart obligatoires.");return;}
-  if(new Date(co)<=new Date(ci)){alert("La date de depart doit etre apres l arrivee.");return;}
+  if(new Date(co)<=new Date(ci)){alert("La date de depart doit etre apres l'arrivee.");return;}
   var nuits=Math.max(1,diff(ci,co)),prixNuit=gi("rf-prix")||getPD(ch),montantTotal=prixNuit*nuits,ac=gv("rf-ac");
   var tel=gv("rf-tel"),ville=gv("rf-ville"),piece=gv("rf-piece");
   var data={client:cl,chambre:ch,checkIn:ci,checkOut:co,nuits:nuits,prixNuit:prixNuit,montantTotal:montantTotal,tel:tel,ville:ville,piece:piece,source:gv("rf-src")||SRC[0],statut:gv("rf-st")||"confirmee",employe:gv("rf-emp")||EMP[0],notes:gv("rf-notes"),acompte:ac};
@@ -689,17 +708,16 @@ function openRezDetail(id){
   var r=REZ[id];if(!r)return;
   var reste=(r.montantTotal||0)-(parseInt(r.acompte)||0);
   var h="<div style='margin-bottom:14px'>"+bdg(r.statut)+"</div>";
-  var rows=[["Arrivee",fmtD(r.checkIn)],["Depart",fmtD(r.checkOut)],["Duree",(r.nuits||1)+" nuit(s)"],["Prix/nuit",fmt(r.prixNuit||getPD(r.chambre))],["Telephone",r.tel||"--"],["Ville",r.ville||"--"],["Piece",r.piece||"--"],["Source",r.source||"--"],["Par",r.employe||"--"],["Total",fmt(r.montantTotal||0)],["Acompte",fmt(parseInt(r.acompte)||0)],["Reste",fmt(reste<0?0:reste)]];
+  var rows=[["Arrivee",fmtD(r.checkIn)],["Depart",fmtD(r.checkOut)],["Duree",(r.nuits||1)+" nuit(s)"],["Prix/nuit",fmt(r.prixNuit||getPD(r.chambre))],["Telephone",r.tel||"—"],["Ville",r.ville||"—"],["Piece",r.piece||"—"],["Source",r.source||"—"],["Par",r.employe||"—"],["Total",fmt(r.montantTotal||0)],["Acompte",fmt(parseInt(r.acompte)||0)],["Reste",fmt(reste<0?0:reste)]];
   rows.forEach(function(kv){h+="<div class='dr'><span class='dk'>"+kv[0]+"</span><span class='dv'>"+kv[1]+"</span></div>";});
   if(r.notes)h+="<div style='margin-top:10px;font-size:13px;color:#6b7280;background:#f9fafb;border-radius:8px;padding:10px'>"+r.notes+"</div>";
   h+="<div class='brow' style='margin-top:16px'>";
-  if(r.statut==="confirmee"||r.statut==="en attente")h+="<button class='btn bblue' onclick=\\"doRCI('"+id+"')\\">Check-in</button>";
-  if(r.statut==="check-in")h+="<button class='btn bpurp' onclick=\\"doRCO('"+id+"')\\">Check-out</button>";
-  h+="<button class='btn bor-dark' onclick=\\"closeModal();openRezForm('"+id+"',null)\\">Modifier</button>";
-  if(r.statut!=="annulee"&&r.statut!=="check-out")h+="<button class='btn bor-red' onclick=\\"annRez('"+id+"')\\">Annuler</button>";
-  h+="<button class='btn bred' onclick=\\"supprimerRez('"+id+"')\\">Supprimer</button>";
-  if(r.tel)h+="<button class='btn bwhats' onclick=\\"envoyerMerci('"+r.client+"','"+r.tel+"','"+r.chambre+"')\\">WhatsApp</button>";
-  h+="<button class='btn bgold' onclick=\\"genererFacture('"+id+"')\\">Facture PDF</button>";
+  if(r.statut==="confirmee"||r.statut==="en attente")h+="<button class='btn bblue' onclick=\"doRCI('"+id+"')\">Check-in</button>";
+  if(r.statut==="check-in")h+="<button class='btn bpurp' onclick=\"doRCO('"+id+"')\">Check-out</button>";
+  h+="<button class='btn bor-dark' onclick=\"closeModal();openRezForm('"+id+"',null)\">Modifier</button>";
+  if(r.statut!=="annulee"&&r.statut!=="check-out")h+="<button class='btn bor-red' onclick=\"annRez('"+id+"')\">Annuler</button>";
+  h+="<button class='btn bred' onclick=\"supprimerRez('"+id+"')\">Supprimer</button>";
+  if(r.tel)h+="<button class='btn bwhats' onclick=\"envoyerMerci('"+r.client+"','"+r.tel+"','"+r.chambre+"')\">WhatsApp</button>";
   h+="</div>";
   openModal("Ch."+r.chambre+" - "+r.client,h);
 }
@@ -747,10 +765,10 @@ function renderCal(){
   document.getElementById("calgrid").innerHTML=h;
 }
 
-// BAR
+// ── BAR ───────────────────────────────────────────────────────
 function renderBar(){
   var cats=["Tous"];MENU.forEach(function(m){if(cats.indexOf(m.cat)<0)cats.push(m.cat);});
-  document.getElementById("barcats").innerHTML=cats.map(function(c){return"<button class='fb "+(c===barCat?"active":"")+"' onclick=\\"setBC('"+c+"',this)\\">"+c+"</button>";}).join("");
+  document.getElementById("barcats").innerHTML=cats.map(function(c){return"<button class='fb "+(c===barCat?"active":"")+"' onclick=\"setBC('"+c+"',this)\">"+c+"</button>";}).join("");
   var items=barCat==="Tous"?MENU:MENU.filter(function(m){return m.cat===barCat;});
   document.getElementById("menugrid").innerHTML=items.map(function(item){return"<div class='mitem' onclick='addCmd("+item.id+")'><div><div style='font-weight:600;font-size:13px'>"+item.nom+"</div><div style='font-size:12px;color:#059669;font-weight:700'>"+fmt(item.prix)+"</div></div><span class='plus'>+</span></div>";}).join("");
   renderCmd();
@@ -778,7 +796,7 @@ function validerCmd(){
   document.getElementById("barhisto").innerHTML="<h4 style='color:#374151;margin-bottom:8px;margin-top:4px'>Commandes du jour</h4>"+HISTO.map(function(x){return"<div class='card'><div style='display:flex;justify-content:space-between'><span style='font-weight:600;font-size:13px'>"+(x.table||"Comptoir")+" - "+x.heure+"</span><span style='font-weight:800;color:#059669'>"+fmt(x.total)+"</span></div><div style='font-size:11px;color:#6b7280;margin-top:3px'>"+x.items.map(function(i){return i.nom+"x"+i.qte;}).join(", ")+"</div></div>";}).join("");
 }
 
-// CAISSE
+// ── CAISSE ────────────────────────────────────────────────────
 function renderCaisse(){
   var ts=tod(),ms=ts.slice(0,7);
   var txArr=Object.values(TX),depArr=Object.values(DEP);
@@ -795,7 +813,7 @@ function renderCaisse(){
   document.getElementById("csolde").textContent=fmt(totalM-totalDep);
   document.getElementById("txlist").innerHTML=txArr.sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);}).slice(0,80).map(function(t){
     var bg={Chambre:"#dbeafe",Restaurant:"#d1fae5",Bar:"#ede9fe",Divers:"#f3f4f6"}[t.type]||"#f9fafb";
-    return"<div class='txrow' style='background:"+bg+"'><div><div class='td'>"+t.desc+"</div><div class='tm'>"+t.type+" - "+t.employe+" - "+fmtD(t.date)+"</div></div><div style='display:flex;align-items:center'><span class='ta' style='color:#059669'>"+fmt(t.montant)+"</span><button class='tdel' onclick=\\"suppTX('"+t.id+"')\\">x</button></div></div>";
+    return"<div class='txrow' style='background:"+bg+"'><div><div class='td'>"+t.desc+"</div><div class='tm'>"+t.type+" - "+t.employe+" - "+fmtD(t.date)+"</div></div><div style='display:flex;align-items:center'><span class='ta' style='color:#059669'>"+fmt(t.montant)+"</span><button class='tdel' onclick=\"suppTX('"+t.id+"')\">x</button></div></div>";
   }).join("");
 }
 function suppTX(id){if(!confirm("Supprimer cette transaction ?"))return;delTX(id);}
@@ -823,7 +841,7 @@ function reinitMois(){
   batch.commit().then(function(){alert("Mois reinitialise avec succes.");});
 }
 
-// DEPENSES
+// ── DEPENSES ──────────────────────────────────────────────────
 function setDF(f,b){dF=f;document.querySelectorAll("#depfiltres .fb").forEach(function(x){x.classList.remove("active");});b.classList.add("active");renderDepenses();}
 function renderDepenses(){
   var ms=tod().slice(0,7);
@@ -834,7 +852,7 @@ function renderDepenses(){
   document.getElementById("deplist").innerHTML=list.map(function(d){
     return"<div class='txrow' style='background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;margin-bottom:6px'>"
       +"<div><div class='td'>"+d.desc+"</div><div class='tm'>"+d.categorie+" - "+d.employe+" - "+fmtD(d.date)+"</div></div>"
-      +"<div style='display:flex;align-items:center'><span class='ta' style='color:#dc2626'>-"+fmt(d.montant)+"</span><button class='tdel' onclick=\\"suppDEP('"+d.id+"')\\">x</button></div></div>";
+      +"<div style='display:flex;align-items:center'><span class='ta' style='color:#dc2626'>-"+fmt(d.montant)+"</span><button class='tdel' onclick=\"suppDEP('"+d.id+"')\">x</button></div></div>";
   }).join("");
 }
 function suppDEP(id){if(!confirm("Supprimer cette depense ?"))return;delDEP(id);}
@@ -855,7 +873,7 @@ function saveDep(){
   closeModal();
 }
 
-// MAINTENANCE
+// ── MAINTENANCE ───────────────────────────────────────────────
 function setMF(f,b){mF=f;document.querySelectorAll("#maintfiltres .fb").forEach(function(x){x.classList.remove("active");});b.classList.add("active");renderMaint();}
 function renderMaint(){
   var list=Object.values(MAINT).filter(function(m){return mF==="tous"||m.statut===mF;}).sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
@@ -863,7 +881,7 @@ function renderMaint(){
   document.getElementById("maintlist").innerHTML=list.map(function(m){
     var pc={"haute":"prio-haute","moyenne":"prio-moyenne","basse":"prio-basse"}[m.priorite]||"prio-moyenne";
     var cs=m.statut==="resolu"?"border:2px solid #6ee7b7;background:#f0fdf4":"border:2px solid #fde68a;background:#fffbeb";
-    return"<div class='card' onclick=\\"openMaintDetail('"+m.id+"')\\" style='cursor:pointer;"+cs+"'>"
+    return"<div class='card' onclick=\"openMaintDetail('"+m.id+"')\" style='cursor:pointer;"+cs+"'>"
       +"<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px'>"
       +"<div style='font-weight:700;font-size:14px'>Ch."+(m.chambre||"?")+" - "+m.titre+"</div>"
       +"<span class='badge-prio "+pc+"'>"+m.priorite+"</span></div>"
@@ -882,19 +900,19 @@ function openMaintForm(id){
   h+="<div class='fg'><label>Technicien</label><input id='mt-tech' value='"+(m?m.technicien||"":"")+"' placeholder='Nom du technicien'/></div>";
   h+="<div class='fg'><label>Cout (F)</label><input type='number' id='mt-cout' value='"+(m?m.cout||"":"")+"' placeholder='0'/></div>";
   h+="<button class='btn borange bfull' style='margin-bottom:8px' onclick='saveMaint()'>Enregistrer</button>";
-  if(id)h+="<button class='btn bor-red bfull' onclick=\\"suppMaint('"+id+"')\\">Supprimer</button>";
+  if(id)h+="<button class='btn bor-red bfull' onclick=\"suppMaint('"+id+"')\">Supprimer</button>";
   openModal(id?"Modifier ticket":"Nouveau ticket maintenance",h);
 }
 function openMaintDetail(id){
   var m=MAINT[id];if(!m)return;
   var pc={"haute":"prio-haute","moyenne":"prio-moyenne","basse":"prio-basse"}[m.priorite]||"prio-moyenne";
   var h="<div style='margin-bottom:12px'><span class='badge-prio "+pc+"'>Priorite: "+m.priorite+"</span></div>";
-  var rows=[["Chambre",m.chambre||"--"],["Titre",m.titre||"--"],["Description",m.desc||"--"],["Statut",m.statut||"--"],["Date",fmtD(m.date)],["Technicien",m.technicien||"--"],["Cout",m.cout?fmt(m.cout):"--"]];
+  var rows=[["Chambre",m.chambre||"—"],["Titre",m.titre||"—"],["Description",m.desc||"—"],["Statut",m.statut||"—"],["Date",fmtD(m.date)],["Technicien",m.technicien||"—"],["Cout",m.cout?fmt(m.cout):"—"]];
   rows.forEach(function(kv){h+="<div class='dr'><span class='dk'>"+kv[0]+"</span><span class='dv'>"+kv[1]+"</span></div>";});
   h+="<div class='brow' style='margin-top:16px'>";
-  h+="<button class='btn borange' onclick=\\"closeModal();openMaintForm('"+id+"')\\">Modifier</button>";
-  if(m.statut==="ouvert")h+="<button class='btn bgreen' onclick=\\"resolMaint('"+id+"')\\">Marquer resolu</button>";
-  h+="<button class='btn bor-red' onclick=\\"suppMaint('"+id+"')\\">Supprimer</button>";
+  h+="<button class='btn borange' onclick=\"closeModal();openMaintForm('"+id+"')\">Modifier</button>";
+  if(m.statut==="ouvert")h+="<button class='btn bgreen' onclick=\"resolMaint('"+id+"')\">Marquer resolu</button>";
+  h+="<button class='btn bor-red' onclick=\"suppMaint('"+id+"')\">Supprimer</button>";
   h+="</div>";
   openModal("Ch."+(m.chambre||"?")+" - "+m.titre,h);
 }
@@ -909,62 +927,105 @@ function saveMaint(){
 function resolMaint(id){db.collection("maintenance").doc(String(id)).set({statut:"resolu",updatedAt:Date.now()},{merge:true});closeModal();}
 function suppMaint(id){if(!confirm("Supprimer ce ticket ?"))return;delMAINT(id);closeModal();}
 
-// CLIENTS
+// ── CLIENTS ───────────────────────────────────────────────────
 function filterCl(v){clS=v;renderClients();}
 function renderClients(){
   var s=(clS||"").toLowerCase();
   var list=Object.values(CLIENTS).filter(function(c){
     if(!s)return true;
-    return(c.nom&&c.nom.toLowerCase().indexOf(s)>=0)||(c.tel&&c.tel.toLowerCase().indexOf(s)>=0)||(c.piece&&c.piece.toLowerCase().indexOf(s)>=0)||(c.ville&&c.ville.toLowerCase().indexOf(s)>=0);
+    return(c.nom&&c.nom.toLowerCase().indexOf(s)>=0)
+        ||(c.tel&&c.tel.toLowerCase().indexOf(s)>=0)
+        ||(c.piece&&c.piece.toLowerCase().indexOf(s)>=0)
+        ||(c.ville&&c.ville.toLowerCase().indexOf(s)>=0);
   }).sort(function(a,b){return(b.totalDepense||0)-(a.totalDepense||0);});
-  if(!list.length){document.getElementById("cllist").innerHTML="<div style='text-align:center;color:#9ca3af;padding:40px'>Aucun client trouve</div>";return;}
+
+  if(!list.length){
+    document.getElementById("cllist").innerHTML="<div style='text-align:center;color:#9ca3af;padding:40px'>Aucun client trouve</div>";
+    return;
+  }
   document.getElementById("cllist").innerHTML=list.map(function(c){
     var enSejour=false;
     Object.values(REZ).forEach(function(r){if(r.client&&r.client.toLowerCase()===c.nom.toLowerCase()&&r.statut==="check-in")enSejour=true;});
+    // Dernier sejour
     var histo=Object.values(REZ).filter(function(r){return r.client&&r.client.toLowerCase()===c.nom.toLowerCase();}).sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
     var dernierSejour=histo[0];
-    return"<div class='cl-card' onclick=\\"openClientDetail('"+c.id+"')\\">"
+    return"<div class='cl-card' onclick=\"openClientDetail('"+c.id+"')\">"
       +"<div style='display:flex;justify-content:space-between;align-items:flex-start'>"
-      +"<div style='flex:1'><div style='font-weight:800;font-size:15px;color:#1a1a2e'>"+c.nom+"</div>"
-      +"<div style='font-size:12px;color:#6b7280;margin-top:3px'>"+(c.tel?"&#128222; "+c.tel+"  ":"")+(c.ville?"&#127970; "+c.ville:"")+"</div>"
-      +(c.piece?"<div style='font-size:11px;color:#9ca3af;margin-top:2px'>&#127. "+c.piece+"</div>":"")
-      +"<div style='font-size:11px;color:#6b7280;margin-top:4px'>"+(c.sejours||0)+" sejour"+((c.sejours||0)>1?"s":"")+(dernierSejour?" · Dernier: Ch."+dernierSejour.chambre+" "+fmtD(dernierSejour.checkIn):"")+"</div></div>"
-      +"<div style='text-align:right;min-width:80px'><div style='font-weight:800;color:#059669;font-size:15px'>"+fmt(c.totalDepense||0)+"</div>"
-      +(enSejour?"<div style='background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px;font-size:10px;margin-top:4px;font-weight:700'>En sejour</div>":"")+"</div></div></div>";
+      +"<div style='flex:1'>"
+      +"<div style='font-weight:800;font-size:15px;color:#1a1a2e'>"+c.nom+"</div>"
+      +"<div style='font-size:12px;color:#6b7280;margin-top:3px'>"
+      +(c.tel?"📞 "+c.tel+"  ":"")+(c.ville?"🏙️ "+c.ville:"")
+      +"</div>"
+      +(c.piece?"<div style='font-size:11px;color:#9ca3af;margin-top:2px'>🪪 "+c.piece+"</div>":"")
+      +"<div style='font-size:11px;color:#6b7280;margin-top:4px'>"
+      +(c.sejours||0)+" sejour"+((c.sejours||0)>1?"s":"")
+      +(dernierSejour?" · Dernier: Ch."+dernierSejour.chambre+" "+fmtD(dernierSejour.checkIn):"")
+      +"</div>"
+      +"</div>"
+      +"<div style='text-align:right;min-width:80px'>"
+      +"<div style='font-weight:800;color:#059669;font-size:15px'>"+fmt(c.totalDepense||0)+"</div>"
+      +(enSejour?"<div style='background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px;font-size:10px;margin-top:4px;font-weight:700'>En sejour</div>":"")
+      +"</div>"
+      +"</div>"
+      +"</div>";
   }).join("");
 }
+
 function openClientDetail(id){
   var c=CLIENTS[id];if(!c)return;
-  var histo=Object.values(REZ).filter(function(r){return r.client&&r.client.toLowerCase()===c.nom.toLowerCase();}).sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
+  // Historique sejours
+  var histo=Object.values(REZ).filter(function(r){
+    return r.client&&r.client.toLowerCase()===c.nom.toLowerCase();
+  }).sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
+
   var enSejour=false;
   Object.values(REZ).forEach(function(r){if(r.client&&r.client.toLowerCase()===c.nom.toLowerCase()&&r.statut==="check-in")enSejour=true;});
-  var h="<div class='cl-header'><div style='font-size:22px;font-weight:800'>"+c.nom+"</div>";
-  h+="<div style='font-size:13px;opacity:.8;margin-top:4px'>"+(c.sejours||0)+" sejour"+((c.sejours||0)>1?"s":"")+" - "+fmt(c.totalDepense||0)+" total</div>";
+
+  var h="";
+  // En-tete client
+  h+="<div class='cl-header'>";
+  h+="<div style='font-size:22px;font-weight:800'>"+c.nom+"</div>";
+  h+="<div style='font-size:13px;opacity:.8;margin-top:4px'>"+(c.sejours||0)+" sejour"+((c.sejours||0)>1?"s":"")+" · "+fmt(c.totalDepense||0)+" total</div>";
   if(enSejour)h+="<div class='cl-badge'>En sejour actuellement</div>";
   h+="</div>";
+
+  // Infos
   h+="<div class='fsep'>Coordonnees</div>";
-  [["Telephone",c.tel||"--"],["Ville",c.ville||"--"],["Piece identite",c.piece||"--"]].forEach(function(kv){h+="<div class='dr'><span class='dk'>"+kv[0]+"</span><span class='dv'>"+kv[1]+"</span></div>";});
+  [["📞 Telephone",c.tel||"—"],["🏙️ Ville",c.ville||"—"],["🪪 Piece d'identite",c.piece||"—"]].forEach(function(kv){
+    h+="<div class='dr'><span class='dk'>"+kv[0]+"</span><span class='dv'>"+kv[1]+"</span></div>";
+  });
+
+  // Actions rapides
   h+="<div class='fsep' style='margin-top:16px'>Actions rapides</div>";
   h+="<div class='actions-grid'>";
-  h+="<div class='action-btn' onclick=\\"closeModal();openRezForm(null,CLIENTS['"+id+"'])\\"><div class='ab-icon'>&#128203;</div><div class='ab-label'>Nouvelle reservation</div></div>";
-  h+="<div class='action-btn' onclick='openCIFromClient(\\""+id+"\\")' style='background:#f0fdf4;border-color:#6ee7b7'><div class='ab-icon'>&#127. </div><div class='ab-label'>Check-in direct</div></div>";
-  if(c.tel)h+="<div class='action-btn' onclick=\\"envoyerMerci('"+c.nom+"','"+c.tel+"','')\\"><div class='ab-icon'>&#128. </div><div class='ab-label'>WhatsApp</div></div>";
+  h+="<div class='action-btn' onclick=\"closeModal();openRezForm(null,CLIENTS['"+id+"'])\"><div class='ab-icon'>📋</div><div class='ab-label'>Nouvelle reservation</div></div>";
+  h+="<div class='action-btn' onclick='openCIFromClient(\""+id+"\")' style='background:#f0fdf4;border-color:#6ee7b7'><div class='ab-icon'>🛏️</div><div class='ab-label'>Check-in direct</div></div>";
+  if(c.tel){
+    h+="<div class='action-btn' onclick=\"envoyerMerci('"+c.nom+"','"+c.tel+"','')\"><div class='ab-icon'>💬</div><div class='ab-label'>Message WhatsApp</div></div>";
+  }
   h+="</div>";
+
+  // Historique sejours
   if(histo.length>0){
     h+="<div class='fsep'>Historique des sejours ("+histo.length+")</div>";
     histo.forEach(function(r){
-      var nuits=r.nuits||1,prixNuit=r.prixNuit||getPD(r.chambre);
-      h+="<div class='sejour-card'><div class='sc-top'>";
-      h+="<div><div class='sc-ch'>Ch."+r.chambre+" - "+getTP(r.chambre)+"</div><div class='sc-info'>"+fmtD(r.checkIn)+" au "+fmtD(r.checkOut)+"</div><div class='sc-info'>"+nuits+" nuit"+(nuits>1?"s":"")+" - "+fmt(prixNuit)+"/nuit</div></div>";
-      h+="<div style='text-align:right'><div class='sc-prix'>"+fmt(r.montantTotal||0)+"</div>"+bdg(r.statut)+"</div></div>";
+      var nuits=r.nuits||1;
+      var prixNuit=r.prixNuit||getPD(r.chambre);
+      h+="<div class='sejour-card'>";
+      h+="<div class='sc-top'>";
+      h+="<div><div class='sc-ch'>Ch."+r.chambre+" - "+getTP(r.chambre)+"</div><div class='sc-info'>"+fmtD(r.checkIn)+" → "+fmtD(r.checkOut)+"</div><div class='sc-info'>"+nuits+" nuit"+(nuits>1?"s":"")+" · "+fmt(prixNuit)+"/nuit</div></div>";
+      h+="<div style='text-align:right'><div class='sc-prix'>"+fmt(r.montantTotal||0)+"</div>"+bdg(r.statut)+"</div>";
+      h+="</div>";
       if(r.notes)h+="<div style='font-size:11px;color:#6b7280;margin-top:6px;background:#fff;border-radius:6px;padding:6px'>"+r.notes+"</div>";
       h+="</div>";
     });
   } else {
     h+="<div style='text-align:center;color:#9ca3af;padding:20px;font-size:13px'>Aucun sejour enregistre</div>";
   }
+
   openModal(c.nom,h);
 }
+
 function openCIFromClient(clientId){
   var c=CLIENTS[clientId];if(!c)return;
   var libres=CH_NUMS.filter(function(n){return getSt(n)==="libre";});
@@ -973,189 +1034,41 @@ function openCIFromClient(clientId){
   setTimeout(function(){openCI(libres[0],c);},200);
 }
 
-// STOCK
+// ── STOCK ─────────────────────────────────────────────────────
 function renderStk(){
   var al=Object.values(STK).filter(function(s){return s.qte<=s.seuil;});
   document.getElementById("stkalerts").innerHTML=al.length?"<div class='alerte acr' style='margin-bottom:14px'><h4>Stock bas ("+al.length+")</h4>"+al.map(function(s){return"<p>"+s.nom+": "+s.qte+" "+s.unite+"</p>";}).join("")+"</div>":"";
   document.getElementById("stklist").innerHTML=Object.values(STK).map(function(s){
     var pct=Math.min(100,(s.qte/Math.max(s.seuil*3,1))*100),bas=s.qte<=s.seuil;
-    return"<div class='card' onclick=\\"openStkEdit('"+s.id+"')\\" style='cursor:pointer;"+(bas?"border-color:#fecdd3;background:#fff1f2":"")+"'>"
+    return"<div class='card' onclick=\"openStkEdit('"+s.id+"')\" style='cursor:pointer;"+(bas?"border-color:#fecdd3;background:#fff1f2":"")+"'>"
       +"<div style='display:flex;justify-content:space-between;margin-bottom:7px'><span style='font-weight:600;font-size:14px'>"+s.nom+"</span><span style='font-weight:800;font-size:14px;color:"+(bas?"#be123c":"#059669")+"'>"+s.qte+" "+s.unite+"</span></div>"
       +"<div class='sbar'><div class='sfill' style='width:"+pct+"%;background:"+(bas?"#ef4444":"#22c55e")+"'></div></div>"
       +"<div style='font-size:11px;color:#9ca3af;margin-top:2px'>Seuil: "+s.seuil+" "+s.unite+"</div></div>";
   }).join("");
 }
-function openStockForm(){editStkId=null;var h="<div class='fg'><label>Nom *</label><input id='sf-n' placeholder='Savon de bain'/></div><div class='frow'><div class='fg'><label>Quantite</label><input type='number' id='sf-q' value='0'/></div><div class='fg'><label>Seuil alerte</label><input type='number' id='sf-s' value='0'/></div></div><div class='fg'><label>Unite</label><input id='sf-u' value='pcs'/></div><button class='btn bdark bfull' onclick='saveStk()'>Enregistrer</button>";openModal("Nouvel article",h);}
-function openStkEdit(id){editStkId=id;var s=STK[id];var h="<div class='fg'><label>Nom</label><input id='sf-n' value='"+s.nom+"'/></div><div class='frow'><div class='fg'><label>Quantite</label><input type='number' id='sf-q' value='"+s.qte+"'/></div><div class='fg'><label>Seuil alerte</label><input type='number' id='sf-s' value='"+s.seuil+"'/></div></div><div class='fg'><label>Unite</label><input id='sf-u' value='"+s.unite+"'/></div><div style='display:flex;gap:8px'><button class='btn bdark bfull' onclick='saveStk()'>Enregistrer</button><button class='btn bor-red' onclick=\\"delStk('"+id+"')\\">Suppr.</button></div>";openModal("Modifier - "+s.nom,h);}
-function saveStk(){var nom=gv("sf-n").trim();if(!nom){alert("Entre un nom.");return;}saveSTK(editStkId,{nom:nom,qte:gi("sf-q"),seuil:gi("sf-s"),unite:gv("sf-u")||"pcs"});closeModal();}
+function openStockForm(){
+  editStkId=null;
+  var h="<div class='fg'><label>Nom *</label><input id='sf-n' placeholder='Savon de bain'/></div>";
+  h+="<div class='frow'><div class='fg'><label>Quantite</label><input type='number' id='sf-q' value='0'/></div><div class='fg'><label>Seuil alerte</label><input type='number' id='sf-s' value='0'/></div></div>";
+  h+="<div class='fg'><label>Unite</label><input id='sf-u' value='pcs'/></div>";
+  h+="<button class='btn bdark bfull' onclick='saveStk()'>Enregistrer</button>";
+  openModal("Nouvel article",h);
+}
+function openStkEdit(id){
+  editStkId=id;var s=STK[id];
+  var h="<div class='fg'><label>Nom</label><input id='sf-n' value='"+s.nom+"'/></div>";
+  h+="<div class='frow'><div class='fg'><label>Quantite</label><input type='number' id='sf-q' value='"+s.qte+"'/></div><div class='fg'><label>Seuil alerte</label><input type='number' id='sf-s' value='"+s.seuil+"'/></div></div>";
+  h+="<div class='fg'><label>Unite</label><input id='sf-u' value='"+s.unite+"'/></div>";
+  h+="<div style='display:flex;gap:8px'><button class='btn bdark bfull' onclick='saveStk()'>Enregistrer</button><button class='btn bor-red' onclick=\"delStk('"+id+"')\">Suppr.</button></div>";
+  openModal("Modifier - "+s.nom,h);
+}
+function saveStk(){
+  var nom=gv("sf-n").trim();if(!nom){alert("Entre un nom.");return;}
+  saveSTK(editStkId,{nom:nom,qte:gi("sf-q"),seuil:gi("sf-s"),unite:gv("sf-u")||"pcs"});closeModal();
+}
 function delStk(id){if(!confirm("Supprimer cet article ?"))return;delSTK(id);closeModal();}
 
-// ── FACTURE PDF ──────────────────────────────────────────────
-function genNumFac(){
-  var y=new Date().getFullYear();
-  var n=String(facNumCounter++).padStart(3,"0");
-  return "FH-"+y+"-"+n;
-}
-
-function genererFacture(rezId){
-  var r=REZ[rezId];if(!r)return;
-  var nuits=r.nuits||1;
-  var prixNuit=r.prixNuit||getPD(r.chambre);
-  var total=r.montantTotal||(prixNuit*nuits);
-  var acompte=parseInt(r.acompte)||0;
-  var reste=total-acompte;
-  var numFac=genNumFac();
-  var dateEmission=new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});
-
-  var win=window.open("","_blank","width=900,height=700");
-  if(!win){alert("Autorisez les popups pour afficher la facture.");return;}
-
-  var html="<!DOCTYPE html><html lang='fr'><head><meta charset='utf-8'/>";
-  html+="<title>Facture "+numFac+"</title>";
-  html+="<style>";
-  html+="*{margin:0;padding:0;box-sizing:border-box}";
-  html+="body{font-family:Arial,sans-serif;background:#f0f0f0;color:#1a1a2e;font-size:13px}";
-  html+=".np{background:#1a1a2e;color:#fff;text-align:center;padding:12px;display:flex;gap:10px;justify-content:center;align-items:center}";
-  html+=".np button{background:#c9a227;color:#fff;border:none;padding:10px 22px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700}";
-  html+="@media print{.np{display:none!important}body{background:#fff}.page{box-shadow:none;margin:0}}";
-  html+=".page{background:#fff;max-width:800px;margin:16px auto;box-shadow:0 4px 24px rgba(0,0,0,.18)}";
-  html+=".hdr{background:linear-gradient(135deg,#1a1a2e 0%,#0f3460 100%);padding:28px 36px;display:flex;justify-content:space-between;align-items:center}";
-  html+=".hdr-logo img{width:120px;height:auto}";
-  html+=".hdr-right{text-align:right;color:#fff}";
-  html+=".hdr-right .fac-title{font-size:30px;font-weight:800;color:#c9a227;letter-spacing:2px}";
-  html+=".hdr-right .fac-num{font-size:13px;color:rgba(255,255,255,.8);margin-top:6px}";
-  html+=".hdr-right .fac-date{font-size:12px;color:rgba(255,255,255,.55);margin-top:3px}";
-  html+=".gold-bar{height:4px;background:linear-gradient(90deg,#c9a227,#f5d67a,#c9a227)}";
-  html+=".info-row{display:grid;grid-template-columns:1fr 1fr;padding:24px 36px 16px}";
-  html+=".info-hotel .ih-name{font-size:15px;font-weight:800;margin-bottom:4px}";
-  html+=".info-hotel .ih-line{font-size:12px;color:#6b7280;margin-bottom:2px}";
-  html+=".info-client{background:#f8f9fa;border-left:4px solid #c9a227;padding:14px 16px;border-radius:0 8px 8px 0}";
-  html+=".ic-label{font-size:10px;font-weight:700;color:#c9a227;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}";
-  html+=".ic-name{font-size:16px;font-weight:800;margin-bottom:5px}";
-  html+=".ic-line{font-size:12px;color:#6b7280;margin-bottom:2px}";
-  html+=".sejour-box{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:0 36px 20px}";
-  html+=".sj-item{background:#f8f9fa;border-radius:8px;padding:10px;text-align:center}";
-  html+=".sj-val{font-size:15px;font-weight:800;color:#1a1a2e;margin-bottom:3px}";
-  html+=".sj-lbl{font-size:10px;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px}";
-  html+=".table-wrap{padding:0 36px 20px}";
-  html+=".sec-title{font-size:10px;font-weight:700;color:#c9a227;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e5e7eb}";
-  html+="table{width:100%;border-collapse:collapse}";
-  html+="thead tr{background:#1a1a2e;color:#fff}";
-  html+="thead th{padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}";
-  html+="thead th:last-child{text-align:right}";
-  html+="tbody tr{border-bottom:1px solid #f0f0f0}";
-  html+="tbody tr:nth-child(even){background:#fafafa}";
-  html+="tbody td{padding:10px 12px;font-size:12px}";
-  html+="tbody td:last-child{text-align:right;font-weight:700}";
-  html+="tfoot td{padding:10px 12px;font-size:12px;background:#f8f9fa}";
-  html+=".total-row td{background:#1a1a2e!important;color:#fff!important;font-size:14px!important;font-weight:800!important;padding:13px 12px!important}";
-  html+=".total-row td:last-child{color:#c9a227!important;font-size:16px!important}";
-  html+=".pay-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 36px 24px}";
-  html+=".pay-box{border-radius:10px;padding:14px}";
-  html+=".pay-box.green{background:#f0fdf4;border:1.5px solid #bbf7d0}";
-  html+=".pay-box.red{background:#fff5f5;border:1.5px solid #fecaca}";
-  html+=".pay-label{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}";
-  html+=".pay-amt{font-size:22px;font-weight:800}";
-  html+=".pay-amt.green{color:#059669}.pay-amt.red{color:#dc2626}";
-  html+=".ftr{background:#1a1a2e;padding:18px 36px;display:flex;justify-content:space-between;align-items:center}";
-  html+=".ftr-left{font-size:11px;color:rgba(255,255,255,.6);line-height:1.8}";
-  html+=".ftr-right{text-align:right}";
-  html+=".ftr-merci{font-size:14px;font-weight:700;color:#c9a227;margin-bottom:3px}";
-  html+=".ftr-sub{font-size:11px;color:rgba(255,255,255,.4)}";
-  html+="</style></head><body>";
-
-  html+="<div class='np'>";
-  html+="<button onclick='window.print()'>Imprimer / Sauvegarder PDF</button>";
-  html+="<button onclick='envWA()'>Envoyer par WhatsApp</button>";
-  html+="</div>";
-
-  html+="<div class='page'>";
-
-  // HEADER
-  html+="<div class='hdr'>";
-  html+="<div class='hdr-logo'><img src='data:image/png;base64," + LOGO + "' alt='Fidelie Hotel'/></div>";
-  html+="<div class='hdr-right'><div class='fac-title'>FACTURE</div><div class='fac-num'>N&deg; "+numFac+"</div><div class='fac-date'>Emise le "+dateEmission+"</div></div>";
-  html+="</div>";
-  html+="<div class='gold-bar'></div>";
-
-  # INFO HOTEL + CLIENT
-  html+="<div class='info-row'>";
-  html+="<div class='info-hotel'>";
-  html+="<div style='font-size:10px;font-weight:700;color:#c9a227;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px'>Etablissement</div>";
-  html+="<div class='ih-name'>Fidelie Hotel SARL</div>";
-  html+="<div class='ih-line'>Hebergement - Bar Restaurant - Salle de Conference</div>";
-  html+="<div class='ih-line'>Parking - Wifi</div>";
-  html+="<div class='ih-line' style='margin-top:6px'>N&deg; Contribuable: M089400000018H | RC: 0427</div>";
-  html+="<div class='ih-line'>B.P 298 Kribi Cameroun | Rue Mahalet Nziou</div>";
-  html+="<div class='ih-line'>www.fidelie-hotel.com | info@fidelie-hotel.com</div>";
-  html+="<div class='ih-line'>655 931 027 | 679 349 327 | 691 921 851</div>";
-  html+="</div>";
-  html+="<div style='padding-left:20px'>";
-  html+="<div class='ic-label'>Client</div>";
-  html+="<div class='info-client'>";
-  html+="<div class='ic-name'>"+r.client+"</div>";
-  if(r.tel)html+="<div class='ic-line'>Tél: "+r.tel+"</div>";
-  if(r.ville)html+="<div class='ic-line'>Ville: "+r.ville+"</div>";
-  if(r.piece)html+="<div class='ic-line'>Pièce: "+r.piece+"</div>";
-  html+="</div></div></div>";
-
-  # SEJOUR
-  html+="<div class='table-wrap'><div class='sec-title'>Details du sejour</div></div>";
-  html+="<div class='sejour-box'>";
-  html+="<div class='sj-item'><div class='sj-val'>Ch."+r.chambre+"</div><div class='sj-lbl'>Chambre</div></div>";
-  html+="<div class='sj-item'><div class='sj-val'>"+fmtDLong(r.checkIn)+"</div><div class='sj-lbl'>Arrivee</div></div>";
-  html+="<div class='sj-item'><div class='sj-val'>"+fmtDLong(r.checkOut)+"</div><div class='sj-lbl'>Depart</div></div>";
-  html+="<div class='sj-item'><div class='sj-val'>"+nuits+" nuit"+(nuits>1?"s":"")+"</div><div class='sj-lbl'>Duree</div></div>";
-  html+="</div>";
-
-  # TABLE
-  html+="<div class='table-wrap'>";
-  html+="<div class='sec-title'>Detail de facturation</div>";
-  html+="<table><thead><tr><th style='width:40%'>Description</th><th>Quantite</th><th>Prix unitaire</th><th>TVA</th><th>Montant</th></tr></thead>";
-  html+="<tbody><tr><td>Hebergement - Chambre "+r.chambre+" ("+getTP(r.chambre)+")</td><td>"+nuits+" nuit"+(nuits>1?"s":"")+"</td><td>"+fmt(prixNuit)+"</td><td>Exonere</td><td>"+fmt(total)+"</td></tr></tbody>";
-  html+="<tfoot>";
-  html+="<tr><td colspan='4' style='color:#6b7280'>Sous-total HT</td><td style='font-weight:700'>"+fmt(total)+"</td></tr>";
-  html+="<tr><td colspan='4' style='color:#6b7280'>TVA (0% - Exonere)</td><td style='font-weight:700'>0 F</td></tr>";
-  html+="<tr class='total-row'><td colspan='4'>TOTAL A PAYER</td><td>"+fmt(total)+"</td></tr>";
-  html+="</tfoot></table></div>";
-
-  # PAIEMENT
-  html+="<div class='pay-row'>";
-  html+="<div class='pay-box green'><div class='pay-label'>Acompte recu</div><div class='pay-amt green'>"+fmt(acompte)+"</div><div style='font-size:11px;color:#6b7280;margin-top:4px'>Recu a l arrivee</div></div>";
-  html+="<div class='pay-box red'><div class='pay-label'>Reste a payer</div><div class='pay-amt red'>"+fmt(reste<0?0:reste)+"</div><div style='font-size:11px;color:#6b7280;margin-top:4px'>A regler a la reception</div></div>";
-  html+="</div>";
-
-  # FOOTER
-  html+="<div class='ftr'>";
-  html+="<div class='ftr-left'><div>Fidelie Hotel SARL - Kribi, Cameroun</div><div>655 931 027 | 679 349 327 | 691 921 851</div><div>www.fidelie-hotel.com</div></div>";
-  html+="<div class='ftr-right'><div class='ftr-merci'>Merci de votre confiance !</div><div class='ftr-sub'>Nous esperons vous revoir tres bientot</div></div>";
-  html+="</div></div>";
-
-  html+="<script>";
-  html+="function envWA(){";
-  html+="var msg='*FACTURE "+numFac+" - FIDELIE HOTEL*\\\\n\\\\n";
-  html+="Client: "+r.client+"\\\\n";
-  if r.tel:
-      html+="Tel: "+r.tel+"\\\\n"
-  html+="Chambre: "+str(r.chambre)+" - "+getTP(r.chambre)+"\\\\n";
-  html+="Arrivee: "+fmtDLong(r.checkIn)+"\\\\n";
-  html+="Depart: "+fmtDLong(r.checkOut)+"\\\\n";
-  html+=str(nuits)+" nuit"+(\"s\" if nuits>1 else \"\")+\" x \"+fmt(prixNuit)+\"\\\\n\";
-  html+="*TOTAL: "+fmt(total)+"*\\\\n";
-  if acompte>0:
-      html+="Acompte: "+fmt(acompte)+"\\\\nReste: "+fmt(max(0,reste))+"\\\\n"
-  html+="\\\\nFidelie Hotel Kribi | 655 931 027';";
-  html+="var t='"+r.tel+"'.replace(/\\\\s+/g,'').replace(/^\\\\+/,'');";
-  html+="if(t){window.open('https://wa.me/'+t+'?text='+encodeURIComponent(msg),'_blank');}";
-  html+="else{var d=prompt('Numero WhatsApp (+237...)');if(d){var n=d.replace(/\\\\s+/g,'').replace(/^\\\\+/,'');window.open('https://wa.me/'+n+'?text='+encodeURIComponent(msg),'_blank');}}}";
-  html+="<\/script></body></html>";
-
-  win.document.write(html);
-  win.document.close();
-  closeModal();
-}
-
-// RAPPORTS
+// ── RAPPORTS ──────────────────────────────────────────────────
 function updateRapPeriode(){document.getElementById("rap-custom").classList.toggle("hide",gv("rap-periode")!=="custom");}
 function getPeriodeDates(){
   var p=gv("rap-periode"),fin=tod(),debut=tod();
@@ -1165,6 +1078,7 @@ function getPeriodeDates(){
   return{debut:debut,fin:fin};
 }
 function inP(date,debut,fin){return date&&date>=debut&&date<=fin;}
+
 function genererRapport(type){
   var p=getPeriodeDates();
   var texte=buildRapport(type,p.debut,p.fin);
@@ -1172,136 +1086,144 @@ function genererRapport(type){
   var h="<div style='background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:14px;margin-bottom:14px'>";
   h+="<div style='font-size:11px;color:#065f46;font-weight:700;margin-bottom:4px'>APERCU</div>";
   h+="<pre style='font-size:11px;color:#374151;white-space:pre-wrap;line-height:1.6;max-height:260px;overflow-y:auto'>"+texte+"</pre></div>";
-  h+="<button class='btn bwhats bfull' style='margin-bottom:10px' onclick='envoyerRapWA(\\""+type+"\\")'>Envoyer par WhatsApp</button>";
-  h+="<button class='btn bor-dark bfull' onclick='imprimerRap(\\""+type+"\\")'>Imprimer / PDF</button>";
+  h+="<button class='btn bwhats bfull' style='margin-bottom:10px' onclick='envoyerRapWA(\""+type+"\")'>📲 Envoyer par WhatsApp</button>";
+  h+="<button class='btn bor-dark bfull' onclick='imprimerRap(\""+type+"\")'>🖨️ Imprimer / PDF</button>";
   openModal(titres[type]||"Rapport",h);
 }
+
 function buildRapport(type,debut,fin){
   var now=new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});
   var L="================================";
-  var t="FIDELIE HOTEL - KRIBI\\n"+L+"\\n";
+  var t="FIDELIE HOTEL - KRIBI\n"+L+"\n";
   var titres={synthese:"SYNTHESE GENERALE",caisse:"RAPPORT CAISSE",reservations:"RAPPORT RESERVATIONS",chambres:"RAPPORT CHAMBRES",depenses:"RAPPORT DEPENSES",clients:"RAPPORT CLIENTS",maintenance:"RAPPORT MAINTENANCE",stock:"RAPPORT STOCK"};
-  t+=(titres[type]||"RAPPORT")+"\\n";
-  t+="Periode: "+fmtD(debut)+" au "+fmtD(fin)+"\\nGenere le: "+now+"\\n"+L+"\\n\\n";
+  t+=(titres[type]||"RAPPORT")+"\n";
+  t+="Periode: "+fmtD(debut)+" au "+fmtD(fin)+"\nGenere le: "+now+"\n"+L+"\n\n";
+
   var txArr=Object.values(TX).filter(function(x){return inP(x.date,debut,fin);});
   var depArr=Object.values(DEP).filter(function(x){return inP(x.date,debut,fin);});
   var rezArr=Object.values(REZ).filter(function(x){return inP(x.checkIn,debut,fin)||inP(x.checkOut,debut,fin);});
+
   if(type==="synthese"){
     var tR=txArr.reduce(function(s,x){return s+x.montant;},0);
     var tD=depArr.reduce(function(s,x){return s+x.montant;},0);
     var occ=CH_NUMS.filter(function(n){return getSt(n)==="occupee";}).length;
-    t+="OCCUPATION\\n  Occupees: "+occ+"/27 | Libres: "+(27-occ)+"\\n\\n";
-    t+="FINANCES\\n";
-    t+="  Total recettes:   "+fmt(tR)+"\\n";
-    t+="  - Chambres:       "+fmt(txArr.filter(function(x){return x.type==="Chambre";}).reduce(function(s,x){return s+x.montant;},0))+"\\n";
-    t+="  - Bar/Resto:      "+fmt(txArr.filter(function(x){return x.type==="Restaurant"||x.type==="Bar";}).reduce(function(s,x){return s+x.montant;},0))+"\\n";
-    t+="  - Divers:         "+fmt(txArr.filter(function(x){return x.type==="Divers";}).reduce(function(s,x){return s+x.montant;},0))+"\\n";
-    t+="  Total depenses:   "+fmt(tD)+"\\n";
-    t+="  SOLDE NET:        "+fmt(tR-tD)+"\\n\\n";
-    t+="RESERVATIONS\\n  Total: "+rezArr.length+" | Check-in: "+rezArr.filter(function(r){return r.statut==="check-in";}).length+" | Annulees: "+rezArr.filter(function(r){return r.statut==="annulee";}).length+"\\n";
+    t+="OCCUPATION\n  Occupees: "+occ+"/27 | Libres: "+(27-occ)+"\n\n";
+    t+="FINANCES\n";
+    t+="  Total recettes:   "+fmt(tR)+"\n";
+    t+="  - Chambres:       "+fmt(txArr.filter(function(x){return x.type==="Chambre";}).reduce(function(s,x){return s+x.montant;},0))+"\n";
+    t+="  - Bar/Resto:      "+fmt(txArr.filter(function(x){return x.type==="Restaurant"||x.type==="Bar";}).reduce(function(s,x){return s+x.montant;},0))+"\n";
+    t+="  - Divers:         "+fmt(txArr.filter(function(x){return x.type==="Divers";}).reduce(function(s,x){return s+x.montant;},0))+"\n";
+    t+="  Total depenses:   "+fmt(tD)+"\n";
+    t+="  SOLDE NET:        "+fmt(tR-tD)+"\n\n";
+    t+="RESERVATIONS\n  Total: "+rezArr.length+" | Check-in: "+rezArr.filter(function(r){return r.statut==="check-in";}).length+" | Annulees: "+rezArr.filter(function(r){return r.statut==="annulee";}).length+"\n";
   }
   else if(type==="caisse"){
-    t+="TOTAL: "+fmt(txArr.reduce(function(s,x){return s+x.montant;},0))+"\\n\\n";
+    t+="TOTAL: "+fmt(txArr.reduce(function(s,x){return s+x.montant;},0))+"\n\n";
     ["Chambre","Restaurant","Bar","Divers"].forEach(function(tp){
       var list=txArr.filter(function(x){return x.type===tp;});
       if(!list.length)return;
-      t+=tp.toUpperCase()+" - "+fmt(list.reduce(function(s,x){return s+x.montant;},0))+"\\n";
-      list.forEach(function(x){t+="  "+fmtD(x.date)+" - "+x.desc+" - "+fmt(x.montant)+" ("+x.employe+")\\n";});
-      t+="\\n";
+      t+=tp.toUpperCase()+" - "+fmt(list.reduce(function(s,x){return s+x.montant;},0))+"\n";
+      list.forEach(function(x){t+="  "+fmtD(x.date)+" - "+x.desc+" - "+fmt(x.montant)+" ("+x.employe+")\n";});
+      t+="\n";
     });
   }
   else if(type==="reservations"){
-    t+="TOTAL: "+rezArr.length+"\\n\\n";
+    t+="TOTAL: "+rezArr.length+"\n\n";
     rezArr.sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);}).forEach(function(r){
-      t+="Ch."+r.chambre+" - "+r.client+" ["+r.statut+"]\\n";
-      t+="  "+fmtD(r.checkIn)+" au "+fmtD(r.checkOut)+" - "+(r.nuits||1)+" nuit"+((r.nuits||1)>1?"s":"")+"\\n";
-      t+="  "+fmt(r.prixNuit||getPD(r.chambre))+"/nuit = "+fmt(r.montantTotal||0)+"\\n";
-      if(r.tel)t+="  Tel: "+r.tel+(r.ville?" | "+r.ville:"")+"\\n";
-      t+="\\n";
+      t+="Ch."+r.chambre+" - "+r.client+" ["+r.statut+"]\n";
+      t+="  "+fmtD(r.checkIn)+" au "+fmtD(r.checkOut)+" - "+(r.nuits||1)+" nuit"+(( r.nuits||1)>1?"s":"")+"\n";
+      t+="  "+fmt(r.prixNuit||getPD(r.chambre))+"/nuit = "+fmt(r.montantTotal||0)+"\n";
+      if(r.tel)t+="  Tel: "+r.tel+(r.ville?" | "+r.ville:"")+"\n";
+      t+="\n";
     });
   }
   else if(type==="chambres"){
     var libres=CH_NUMS.filter(function(n){return getSt(n)==="libre";});
     var occupees=CH_NUMS.filter(function(n){return getSt(n)==="occupee";});
     var maints=CH_NUMS.filter(function(n){return getSt(n)==="maintenance";});
-    t+="LIBRES ("+libres.length+"): "+libres.join(", ")+"\\n\\n";
-    t+="OCCUPEES ("+occupees.length+"):\\n";
+    t+="LIBRES ("+libres.length+"): "+libres.join(", ")+"\n\n";
+    t+="OCCUPEES ("+occupees.length+"):\n";
     occupees.forEach(function(num){
       var ra=null;Object.values(REZ).forEach(function(r){if(r.chambre===num&&r.statut==="check-in")ra=r;});
       var ch=CHAMBRES[num]||{};
-      t+="  Ch."+num+" - "+(ra?ra.client:(ch.client||"--"))+" - Depart: "+fmtD(ra?ra.checkOut:(ch.checkOut||""))+"\\n";
+      t+="  Ch."+num+" - "+(ra?ra.client:(ch.client||"—"))+" - Depart: "+fmtD(ra?ra.checkOut:(ch.checkOut||""))+"\n";
     });
-    if(maints.length)t+="\\nMAINTENANCE ("+maints.length+"): "+maints.join(", ")+"\\n";
+    if(maints.length)t+="\nMAINTENANCE ("+maints.length+"): "+maints.join(", ")+"\n";
   }
   else if(type==="depenses"){
-    t+="TOTAL: "+fmt(depArr.reduce(function(s,x){return s+x.montant;},0))+"\\n\\n";
+    t+="TOTAL: "+fmt(depArr.reduce(function(s,x){return s+x.montant;},0))+"\n\n";
     CAT_DEP.forEach(function(cat){
       var list=depArr.filter(function(x){return x.categorie===cat;});
       if(!list.length)return;
-      t+=cat.toUpperCase()+" - "+fmt(list.reduce(function(s,x){return s+x.montant;},0))+"\\n";
-      list.forEach(function(x){t+="  "+fmtD(x.date)+" - "+x.desc+" - "+fmt(x.montant)+"\\n";});
-      t+="\\n";
+      t+=cat.toUpperCase()+" - "+fmt(list.reduce(function(s,x){return s+x.montant;},0))+"\n";
+      list.forEach(function(x){t+="  "+fmtD(x.date)+" - "+x.desc+" - "+fmt(x.montant)+"\n";});
+      t+="\n";
     });
   }
   else if(type==="clients"){
     var cls=Object.values(CLIENTS).sort(function(a,b){return(b.totalDepense||0)-(a.totalDepense||0);});
-    t+="TOTAL CLIENTS: "+cls.length+"\\n\\n";
+    t+="TOTAL CLIENTS: "+cls.length+"\n\n";
     cls.forEach(function(c,i){
-      t+=(i+1)+". "+c.nom+"\\n";
-      if(c.tel)t+="   Tel: "+c.tel+"\\n";
-      if(c.ville)t+="   Ville: "+c.ville+"\\n";
-      if(c.piece)t+="   Piece: "+c.piece+"\\n";
-      t+="   Sejours: "+(c.sejours||0)+" | Total: "+fmt(c.totalDepense||0)+"\\n\\n";
+      t+=(i+1)+". "+c.nom+"\n";
+      if(c.tel)t+="   Tel: "+c.tel+"\n";
+      if(c.ville)t+="   Ville: "+c.ville+"\n";
+      if(c.piece)t+="   Piece: "+c.piece+"\n";
+      t+="   Sejours: "+(c.sejours||0)+" | Total: "+fmt(c.totalDepense||0)+"\n\n";
     });
   }
   else if(type==="maintenance"){
     var mArr=Object.values(MAINT);
     var ouv=mArr.filter(function(m){return m.statut==="ouvert";});
     var res=mArr.filter(function(m){return m.statut==="resolu";});
-    t+="EN COURS: "+ouv.length+" | RESOLUS: "+res.length+"\\n\\n";
-    ouv.forEach(function(m){t+="  Ch."+(m.chambre||"?")+" - "+m.titre+" ["+m.priorite+"]\\n  "+m.desc+"\\n  "+fmtD(m.date)+(m.cout?" | "+fmt(m.cout):"")+"\\n\\n";});
-    if(res.length){t+="RESOLUS:\\n";res.forEach(function(m){t+="  Ch."+(m.chambre||"?")+" - "+m.titre+"\\n";});}
+    t+="EN COURS: "+ouv.length+" | RESOLUS: "+res.length+"\n\n";
+    ouv.forEach(function(m){t+="  Ch."+(m.chambre||"?")+" - "+m.titre+" ["+m.priorite+"]\n  "+m.desc+"\n  "+fmtD(m.date)+(m.cout?" | "+fmt(m.cout):"")+"\n\n";});
+    if(res.length){t+="RESOLUS:\n";res.forEach(function(m){t+="  Ch."+(m.chambre||"?")+" - "+m.titre+"\n";});}
   }
   else if(type==="stock"){
     var stkArr=Object.values(STK);
     var bas=stkArr.filter(function(s){return s.qte<=s.seuil;});
-    t+="TOTAL ARTICLES: "+stkArr.length+" | ALERTES: "+bas.length+"\\n\\n";
-    if(bas.length){t+="STOCK BAS:\\n";bas.forEach(function(s){t+="  *** "+s.nom+": "+s.qte+" "+s.unite+" (seuil: "+s.seuil+")\\n";});t+="\\n";}
-    t+="INVENTAIRE:\\n";
-    stkArr.sort(function(a,b){return a.nom.localeCompare(b.nom);}).forEach(function(s){t+="  "+s.nom+": "+s.qte+" "+s.unite+"\\n";});
+    t+="TOTAL ARTICLES: "+stkArr.length+" | ALERTES: "+bas.length+"\n\n";
+    if(bas.length){t+="STOCK BAS:\n";bas.forEach(function(s){t+="  *** "+s.nom+": "+s.qte+" "+s.unite+" (seuil: "+s.seuil+")\n";});t+="\n";}
+    t+="INVENTAIRE:\n";
+    stkArr.sort(function(a,b){return a.nom.localeCompare(b.nom);}).forEach(function(s){t+="  "+s.nom+": "+s.qte+" "+s.unite+"\n";});
   }
-  t+="\\n"+L+"\\nFidelie Hotel SARL - Kribi | Rapport automatique";
+
+  t+="\n"+L+"\nFidelie Hotel - Kribi | Rapport automatique";
   return t;
 }
+
 function envoyerRapWA(type){
-  var p=getPeriodeDates();var texte=buildRapport(type,p.debut,p.fin);
+  var p=getPeriodeDates();
+  var texte=buildRapport(type,p.debut,p.fin);
   var h="<div class='fg'><label>Numero WhatsApp</label><input id='rap-tel' placeholder='+237...' type='tel'/></div>";
   h+="<div class='fg'><label>Message</label><textarea class='whats-msg' id='rap-msg' style='min-height:120px'>"+texte+"</textarea></div>";
-  h+="<button class='btn bwhats bfull' style='margin-top:8px' onclick='sendRapWA()'>Envoyer</button>";
+  h+="<button class='btn bwhats bfull' style='margin-top:8px' onclick='sendRapWA()'>📲 Envoyer</button>";
   h+="<button class='btn bor-dark bfull' style='margin-top:8px' onclick='closeModal()'>Annuler</button>";
   openModal("Envoyer le rapport",h);
 }
 function sendRapWA(){
-  var tel=gv("rap-tel").replace(/\\s+/g,"").replace(/^\\+/,"");
+  var tel=gv("rap-tel").replace(/\s+/g,"").replace(/^\+/,"");
   if(!tel){alert("Entre un numero WhatsApp.");return;}
   window.open("https://wa.me/"+tel+"?text="+encodeURIComponent(gv("rap-msg")),"_blank");
   closeModal();
 }
 function imprimerRap(type){
-  var p=getPeriodeDates();var texte=buildRapport(type,p.debut,p.fin);
+  var p=getPeriodeDates();
+  var texte=buildRapport(type,p.debut,p.fin);
   var win=window.open("","_blank");
-  win.document.write("<!DOCTYPE html><html><head><meta charset='utf-8'/><title>Rapport</title><style>body{font-family:monospace;font-size:13px;padding:24px;color:#000}pre{white-space:pre-wrap;line-height:1.7}@media print{.np{display:none}}<\/style><\/head><body>");
-  win.document.write("<button class='np' onclick='window.print()' style='padding:10px 20px;background:#1a1a2e;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-bottom:16px;font-size:14px;font-weight:700'>Imprimer / Sauvegarder PDF<\/button>");
-  win.document.write("<pre>"+texte+"<\/pre><\/body><\/html>");
+  win.document.write("<!DOCTYPE html><html><head><meta charset='utf-8'/><title>Rapport</title>");
+  win.document.write("<style>body{font-family:monospace;font-size:13px;padding:24px;color:#000}pre{white-space:pre-wrap;line-height:1.7}@media print{.np{display:none}}</style></head><body>");
+  win.document.write("<button class='np' onclick='window.print()' style='padding:10px 20px;background:#1a1a2e;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-bottom:16px;font-size:14px;font-weight:700'>Imprimer / Sauvegarder PDF</button>");
+  win.document.write("<pre>"+texte+"</pre></body></html>");
   win.document.close();
 }
 
-// MODAL
+// ── MODAL ─────────────────────────────────────────────────────
 function openModal(title,body){document.getElementById("mtitle").textContent=title;document.getElementById("mbody").innerHTML=body;document.getElementById("mbg").classList.add("open");}
 function closeModal(){document.getElementById("mbg").classList.remove("open");}
 function closeMBG(e){if(e.target===document.getElementById("mbg"))closeModal();}
 
-// INIT
+// ── INIT ──────────────────────────────────────────────────────
 document.getElementById("hdate").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
 document.getElementById("baremp").innerHTML=opt(EMP);
 document.getElementById("rap-du").value=tod().slice(0,7)+"-01";
