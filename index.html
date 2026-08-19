@@ -190,6 +190,25 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
 .sal-statut.non_paye{background:#fee2e2;color:#991b1b}
 .sal-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .sal-actions button{border:none;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;flex:1}
+.fchip{flex:0 0 auto;padding:5px 12px;border-radius:20px;border:2px solid #e5e7eb;background:transparent;color:#6b7280;font-size:11px;font-weight:700;cursor:pointer}
+.fchip.active{border-color:#1a1a2e;background:#1a1a2e;color:#fff}
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+
+/* CHARGES FIXES */
+.ch-fix-card{border:1.5px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:10px;background:#fff}
+.ch-fix-card.retard{border-color:#fca5a5;background:#fff5f5}
+.ch-fix-card.bientot{border-color:#fde68a;background:#fffbeb}
+.ch-fix-card.ok{border-color:#6ee7b7;background:#f0fdf4}
+.ch-fix-card.annuel{border-left:4px solid #6366f1}
+.ch-fix-nom{font-size:14px;font-weight:800;color:#1a1a2e}
+.ch-fix-cat{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#9ca3af;margin-top:2px}
+.ch-fix-amt{font-size:18px;font-weight:900;color:#0f3460;margin-top:4px}
+.ch-fix-dl{font-size:11px;margin-top:4px;font-weight:600}
+.ch-fix-dl.retard{color:#dc2626}
+.ch-fix-dl.bientot{color:#d97706}
+.ch-fix-dl.ok{color:#059669}
+.ch-fix-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700}
+.alerte-card{background:#fee2e2;border:1.5px solid #fca5a5;border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
 </style>
 </head>
 <body>
@@ -239,6 +258,7 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
   <button class="tab-btn" onclick="goTab('rapports')" id="tb-rapports">📊<br>Rapports</button>
   <button class="tab-btn" onclick="goTab('menage')" id="tb-menage">🧹<br>Ménage</button>
   <button class="tab-btn hide" onclick="goTab('salaires')" id="tb-salaires">💵<br>Salaires</button>
+  <button class="tab-btn hide" onclick="goTab('charges')" id="tb-charges">⚡<br>Charges</button>
   <button class="tab-btn hide" onclick="goTab('personnel')" id="tb-personnel">🔑<br>Personnel</button>
 </div>
 <div id="content">
@@ -382,7 +402,23 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
     <div class="rapport-card" onclick="genererRapport('clients')"><div class="rapport-icon">👥</div><div class="rapport-title">Clients</div><div class="rapport-desc">Liste et historique</div></div>
     <div class="rapport-card" onclick="genererRapport('maintenance')"><div class="rapport-icon">🔧</div><div class="rapport-title">Maintenance</div><div class="rapport-desc">Tickets et couts</div></div>
     <div class="rapport-card" onclick="genererRapport('stock')"><div class="rapport-icon">📦</div><div class="rapport-title">Stock</div><div class="rapport-desc">Inventaire et alertes</div></div>
+    <div class="rapport-card" onclick="genererRapport('menage')"><div class="rapport-icon">🧹</div><div class="rapport-title">Ménage</div><div class="rapport-desc">Statut des chambres</div></div>
+    <div class="rapport-card" onclick="genererRapport('salaires')"><div class="rapport-icon">💵</div><div class="rapport-title">Salaires</div><div class="rapport-desc">Masse salariale du mois</div></div>
+    <div class="rapport-card" onclick="genererRapport('charges')"><div class="rapport-icon">⚡</div><div class="rapport-title">Charges</div><div class="rapport-desc">Charges fixes et taxes</div></div>
+    <div class="rapport-card" onclick="genererRapport('personnel')"><div class="rapport-icon">🔑</div><div class="rapport-title">Personnel</div><div class="rapport-desc">Liste des employés</div></div>
   </div>
+</div>
+<!-- PAGE CHARGES FIXES -->
+<div class="page" id="page-charges">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <div>
+      <div style="font-size:18px;font-weight:800;color:#1a1a2e">Charges fixes &amp; Taxes</div>
+      <div style="font-size:12px;color:#6b7280;margin-top:2px" id="charges-summary"></div>
+    </div>
+    <button class="btn bdark" onclick="openChargeForm(null)" style="font-size:11px;padding:8px 12px">+ Ajouter</button>
+  </div>
+  <div id="charges-alertes" style="margin-bottom:12px"></div>
+  <div id="charges-list"></div>
 </div>
 <div class="page" id="page-personnel">
   <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:14px;padding:16px;color:#fff;margin-bottom:16px">
@@ -478,8 +514,22 @@ var STK_DEF=[
   {nom:"Eau de Javel",qte:15,seuil:3,unite:"L"},{nom:"Serviettes bain",qte:55,seuil:20,unite:"pcs"},
   {nom:"Draps",qte:40,seuil:15,unite:"jeux"},{nom:"Desinfectant",qte:8,seuil:2,unite:"L"}
 ];
-var CHAMBRES={},REZ={},TX={},DEP={},MAINT={},STK={},CLIENTS={},EMPLOYES={};
+var CHAMBRES={},REZ={},TX={},DEP={},MAINT={},STK={},CLIENTS={},EMPLOYES={},CHARGES_DATA={};
 var EMP_SEEDED=false,CURRENT_EMP=null,pgBuffer="";
+var STK_SEED_CHECKED=false,AMBROISE_ADMIN_CHECKED=false,CHARGES_SEEDED=false;
+var CHARGES_SEED=[
+  {nom:"SOCODEAL — Electricite (Courant)",          cat:"Energie",   freq:"mensuel",     montant:0,      jour:15, mois:"",   actif:true},
+  {nom:"Camtel — Wifi",                             cat:"Telecom",   freq:"mensuel",     montant:0,      jour:10, mois:"",   actif:true},
+  {nom:"Swecom — Cable",                            cat:"Telecom",   freq:"mensuel",     montant:0,      jour:5,  mois:"",   actif:true},
+  {nom:"Canal+ — Bar + Suite 117",                  cat:"Telecom",   freq:"mensuel",     montant:15000,  jour:5,  mois:"",   actif:true},
+  {nom:"Groupe electrogene — Gasoil",               cat:"Energie",   freq:"ponctuel",    montant:0,      jour:0,  mois:"",   actif:true},
+  {nom:"Jardin — Entretien",                        cat:"Entretien", freq:"mensuel",     montant:0,      jour:1,  mois:"",   actif:true},
+  {nom:"Cadastre — Taxe fonciere",                  cat:"Taxes",     freq:"annuel",      montant:0,      jour:31, mois:"03", actif:true},
+  {nom:"Patente / Impot liberatoire",               cat:"Taxes",     freq:"annuel",      montant:0,      jour:31, mois:"03", actif:true},
+  {nom:"IGS — Impot General Synthetique (cat. 8)", cat:"Taxes",     freq:"trimestriel", montant:137500, jour:31, mois:"",   actif:true, noteAnnuel:550000},
+  {nom:"Fonctionnement — Stock menage",             cat:"Stock",     freq:"mensuel",     montant:44000,  jour:1,  mois:"",   actif:true, linked:"stock"},
+  {nom:"Maintenance — Reparations & interventions", cat:"Maintenance",freq:"mensuel",    montant:0,      jour:1,  mois:"",   actif:true, linked:"maintenance"}
+];
 var BAR_OUVERT=false;
 var HORS_SVC=[103,105,106,107,108,109];
 function horsSvcMaintenance(){
@@ -510,7 +560,7 @@ function applyBarState(){
 (function(){try{BAR_OUVERT=localStorage.getItem("fidelie_bar_ouvert")==="1";}catch(e){}})();
 var EMP_SEED_DEFAULT=[
   {nom:"Stephane",pin:"9090",actif:true,role:"admin",createdAt:Date.now()},
-  {nom:"Ambroise",pin:"1111",actif:true,role:"staff",createdAt:Date.now()},
+  {nom:"Ambroise",pin:"1111",actif:true,role:"admin",createdAt:Date.now()},
   {nom:"Dorette",pin:"2222",actif:true,role:"staff",createdAt:Date.now()},
   {nom:"Femme de chambre",pin:"3333",actif:true,role:"staff",createdAt:Date.now()}
 ];
@@ -585,7 +635,16 @@ function startListeners(){
   },function(){setSB("err");});
   db.collection("stock").onSnapshot(function(snap){
     STK={};snap.forEach(function(d){STK[d.id]=Object.assign({},d.data(),{id:d.id});});
-    if(Object.keys(STK).length===0)STK_DEF.forEach(function(s){db.collection("stock").add(Object.assign({},s,{createdAt:Date.now()}));});
+    if(Object.keys(STK).length===0&&!STK_SEED_CHECKED){
+      STK_SEED_CHECKED=true;
+      db.collection("config").doc("seeds").get().then(function(doc){
+        var deja=doc.exists&&doc.data().stock;
+        if(!deja){
+          STK_DEF.forEach(function(s){db.collection("stock").add(Object.assign({},s,{createdAt:Date.now()}));});
+          db.collection("config").doc("seeds").set({stock:true},{merge:true});
+        }
+      });
+    }
     renderStk();upHdr();
   },function(){setSB("err");});
   db.collection("clients").onSnapshot(function(snap){
@@ -600,11 +659,28 @@ function startListeners(){
     SALAIRES_DATA={};snap.forEach(function(d){SALAIRES_DATA[d.id]=Object.assign({},d.data(),{id:d.id});});
     renderSalaires();
   },function(){});
+  db.collection("charges_fixes").onSnapshot(function(snap){
+    CHARGES_DATA={};snap.forEach(function(d){CHARGES_DATA[d.id]=Object.assign({},d.data(),{id:d.id});});
+    if(Object.keys(CHARGES_DATA).length===0&&!CHARGES_SEEDED){
+      CHARGES_SEEDED=true;
+      CHARGES_SEED.forEach(function(c){db.collection("charges_fixes").add(c);});
+    }
+    renderCharges();
+    updateChargesBadge();
+  },function(){});
   db.collection("employes").onSnapshot(function(snap){
     EMPLOYES={};snap.forEach(function(d){EMPLOYES[d.id]=Object.assign({},d.data(),{id:d.id});});
     if(Object.keys(EMPLOYES).length===0&&!EMP_SEEDED){
       EMP_SEEDED=true;
       EMP_SEED_DEFAULT.forEach(function(e){db.collection("employes").add(e);});
+    }
+    if(!AMBROISE_ADMIN_CHECKED){
+      AMBROISE_ADMIN_CHECKED=true;
+      var amb=null,ambId=null;
+      Object.keys(EMPLOYES).forEach(function(id){if(EMPLOYES[id].nom==="Ambroise"){amb=EMPLOYES[id];ambId=id;}});
+      if(amb&&amb.role!=="admin"){
+        db.collection("employes").doc(ambId).set({role:"admin"},{merge:true});
+      }
     }
     var actifs=Object.values(EMPLOYES).filter(function(e){return e.actif!==false;}).map(function(e){return e.nom;});
     if(actifs.length){EMP.length=0;actifs.forEach(function(n){EMP.push(n);});}
@@ -669,6 +745,7 @@ function goTab(id){
   document.getElementById("tb-"+id).classList.add("active");
   if(id==="menage")renderMenage();
   if(id==="salaires")renderSalaires();
+  if(id==="charges")renderCharges();
 }
 
 // CHAMBRES
@@ -1378,7 +1455,7 @@ function inP(date,debut,fin){return date&&date>=debut&&date<=fin;}
 function genererRapport(type){
   var p=getPeriodeDates();
   var texte=buildRapport(type,p.debut,p.fin);
-  var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock"};
+  var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",menage:"Rapport Menage",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
   var h="<div style='background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:14px;margin-bottom:14px'>";
   h+="<div style='font-size:11px;color:#065f46;font-weight:700;margin-bottom:4px'>APERCU</div>";
   h+="<pre style='font-size:11px;color:#374151;white-space:pre-wrap;line-height:1.6;max-height:260px;overflow-y:auto'>"+texte+"</pre></div>";
@@ -1390,7 +1467,7 @@ function buildRapport(type,debut,fin){
   var now=new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});
   var L="================================";
   var t="FIDELIE HOTEL SARL - KRIBI\n"+L+"\n";
-  var titres={synthese:"SYNTHESE GENERALE",caisse:"RAPPORT CAISSE",reservations:"RAPPORT RESERVATIONS",chambres:"RAPPORT CHAMBRES",depenses:"RAPPORT DEPENSES",clients:"RAPPORT CLIENTS",maintenance:"RAPPORT MAINTENANCE",stock:"RAPPORT STOCK"};
+  var titres={synthese:"SYNTHESE GENERALE",caisse:"RAPPORT CAISSE",reservations:"RAPPORT RESERVATIONS",chambres:"RAPPORT CHAMBRES",depenses:"RAPPORT DEPENSES",clients:"RAPPORT CLIENTS",maintenance:"RAPPORT MAINTENANCE",stock:"RAPPORT STOCK",menage:"RAPPORT MENAGE",salaires:"RAPPORT SALAIRES",charges:"RAPPORT CHARGES",personnel:"RAPPORT PERSONNEL"};
   t+=(titres[type]||"RAPPORT")+"\n";
   t+="Periode: "+fmtD(debut)+" au "+fmtD(fin)+"\nGenere le: "+now+"\n"+L+"\n\n";
   var txArr=Object.values(TX).filter(function(x){return inP(x.date,debut,fin);});
@@ -1448,6 +1525,40 @@ function buildRapport(type,debut,fin){
     t+="TOTAL: "+stkArr.length+" | ALERTES: "+bas.length+"\n\n";
     if(bas.length){t+="STOCK BAS:\n";bas.forEach(function(s){t+="  *** "+s.nom+": "+s.qte+" "+s.unite+" (seuil: "+s.seuil+")\n";});t+="\n";}
     t+="INVENTAIRE:\n";stkArr.sort(function(a,b){return a.nom.localeCompare(b.nom);}).forEach(function(s){t+="  "+s.nom+": "+s.qte+" "+s.unite+"\n";});
+  } else if(type==="menage"){
+    var cnts={a_nettoyer:0,en_cours:0,propre:0};
+    CH_NUMS.forEach(function(n){var s=getNettSt(n);cnts[s]=(cnts[s]||0)+1;});
+    t+="A NETTOYER: "+cnts.a_nettoyer+" | EN COURS: "+cnts.en_cours+" | PROPRES: "+cnts.propre+"\n\n";
+    CH_NUMS.forEach(function(n){
+      var nd=NETTOYAGE[n]||{};var s=getNettSt(n);
+      var lbl=s==="a_nettoyer"?"A nettoyer":s==="en_cours"?"En cours":"Propre";
+      t+="  Ch."+n+" - "+lbl+(nd.par?" (par "+nd.par+")":"")+"\n";
+    });
+  } else if(type==="salaires"){
+    var emps=Object.values(EMPLOYES).sort(function(a,b){return(a.nom||"").localeCompare(b.nom||"");});
+    var tM=0,tP=0;
+    t+="MOIS: "+fmtMois(salMois)+"\n\n";
+    emps.forEach(function(e){
+      var key=e.id+"_"+salMois;var s=SALAIRES_DATA[key]||{statut:"non_paye",montant:e.salaire||0};
+      var m=s.montant||e.salaire||0;tM+=m;if(s.statut==="paye")tP+=m;
+      t+="  "+e.nom+" ("+(e.role==="admin"?"Admin":"Personnel")+") - "+fmt(m)+" - "+(s.statut==="paye"?"Paye le "+fmtD(s.date):"En attente")+"\n";
+    });
+    t+="\nTOTAL MASSE: "+fmt(tM)+" | PAYE: "+fmt(tP)+" | RESTE: "+fmt(tM-tP)+"\n";
+  } else if(type==="charges"){
+    var chArr=Object.values(CHARGES_DATA).filter(function(c){return c.actif!==false;});
+    t+="TOTAL CHARGES: "+chArr.length+"\n\n";
+    chArr.forEach(function(c){
+      var s=getChargeStatut(c);
+      var lbl=s==="retard"?"EN RETARD":s==="bientot"?"BIENTOT DU":s==="paye"?"PAYE":s==="info"?"AUTO (module lie)":s==="ok"?"A VENIR":"PONCTUEL";
+      var m=c.linked==="maintenance"?computeMaintenanceMonthTotal():c.montant;
+      t+="  "+c.nom+" ["+c.cat+"] - "+(m>0?fmt(m):"--")+" - "+lbl+"\n";
+    });
+  } else if(type==="personnel"){
+    var pl=Object.values(EMPLOYES).sort(function(a,b){return(a.nom||"").localeCompare(b.nom||"");});
+    t+="TOTAL EMPLOYES: "+pl.length+"\n\n";
+    pl.forEach(function(e){
+      t+="  "+e.nom+" ["+(e.role==="admin"?"Administrateur":"Personnel")+"] - "+(e.actif!==false?"Actif":"Desactive")+"\n";
+    });
   }
   t+="\n"+L+"\nFidelie Hotel SARL - Kribi | Rapport automatique";
   return t;
@@ -1560,7 +1671,8 @@ function genRapportMenage(){
     h+="\n";
   });
   h+="</pre>";
-  h+="<button class='btn bdark bfull' onclick='window.print()' style='margin-top:10px'>Imprimer</button>";
+  h+="<button class='btn bdark bfull' onclick='window.print()' style='margin-top:10px;margin-bottom:8px'>Imprimer</button>";
+  h+="<button class='btn bor-dark bfull' onclick='closeModal()'>Fermer</button>";
   openModal("Rapport Menage",h);
 }
 
@@ -1645,17 +1757,219 @@ function genRapportSalaires(){
     totalMasse+=m;if(s.statut==="paye")totalPaye+=m;
     return "<tr><td>"+e.nom+"</td><td>"+(e.role==="admin"?"Admin":"Personnel")+"</td><td style='text-align:right'>"+fmt(m)+"</td><td style='text-align:center'>"+(s.statut==="paye"?"✓ Paye":"En attente")+"</td><td>"+fmtD(s.date||"")+"</td><td>"+(s.mode||"")+"</td></tr>";
   }).join("");
-  var h="<!DOCTYPE html><html><head><meta charset='utf-8'/><title>Salaires "+fmtMois(salMois)+"</title>";
-  h+="<style>body{font-family:Arial,sans-serif;padding:20px;font-size:13px}h2{color:#0f3460}table{width:100%;border-collapse:collapse;margin-top:14px}th{background:#0f3460;color:#fff;padding:8px;text-align:left}td{padding:8px;border-bottom:1px solid #eee}.total{font-weight:900;background:#f0fdf4}.np{text-align:center;margin-bottom:14px}button{background:#c9a227;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:700}@media print{.np{display:none}}</style></head><body>";
-  h+="<div class='np'><button onclick='window.print()'>Imprimer / PDF</button></div>";
+  var css="body{font-family:Arial,sans-serif;padding:20px;font-size:13px}h2{color:#0f3460}table{width:100%;border-collapse:collapse;margin-top:14px}th{background:#0f3460;color:#fff;padding:8px;text-align:left}td{padding:8px;border-bottom:1px solid #eee}.total{font-weight:900;background:#f0fdf4}.np{text-align:center;margin-bottom:14px}.btn{background:#c9a227;color:#fff;border:none;padding:8px 20px;border-radius:6px;cursor:pointer;font-weight:700}.btn.fermer{background:#6b7280}@media print{.np{display:none}}";
+  var fileName="Fiche_paie_"+fmtMois(salMois).replace(/[^a-zA-Z0-9]+/g,"_")+".html";
+  var h="<!DOCTYPE html><html><head><meta charset='utf-8'/><title>Salaires "+fmtMois(salMois)+"</title><style>"+css+"</style></head><body>";
+  h+="<div class='np' style='display:flex;gap:10px;justify-content:center'><button class='btn' onclick='telechargerFiche()'>Télécharger</button><button class='btn fermer' onclick='window.close()'>Fermer</button></div>";
+  h+="<div id='fichecontent'>";
   h+="<div style='text-align:center;margin-bottom:16px'><h2>FIDELIE HOTEL SARL - KRIBI</h2><div>FICHE DE PAIE - "+fmtMois(salMois).toUpperCase()+"</div><div style='font-size:11px;color:#888'>Genere le "+now+"</div></div>";
   h+="<table><thead><tr><th>Employe</th><th>Role</th><th>Montant</th><th>Statut</th><th>Date paiement</th><th>Mode</th></tr></thead><tbody>"+rows;
   h+="<tr class='total'><td colspan='2'>TOTAL</td><td style='text-align:right'>"+fmt(totalMasse)+"</td><td style='text-align:center'>Paye: "+fmt(totalPaye)+"</td><td colspan='2'>Reste: "+fmt(totalMasse-totalPaye)+"</td></tr>";
-  h+="</tbody></table></body></html>";
+  h+="</tbody></table></div>";
+  h+="<div style='text-align:center;margin-top:20px'><button class='btn fermer' onclick='window.close()'>Fermer</button></div>";
+  h+="<script>function telechargerFiche(){";
+  h+="var styleTxt=document.querySelector('style').textContent;";
+  h+="var contenu=document.getElementById('fichecontent').outerHTML;";
+  h+="var full='<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Fiche de paie</title><style>'+styleTxt+'</style></head><body>'+contenu+'</body></html>';";
+  h+="var blob=new Blob([full],{type:'text/html'});";
+  h+="var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download="+JSON.stringify(fileName)+";";
+  h+="document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);";
+  h+="}<\/script>";
+  h+="</body></html>";
   win.document.write(h);win.document.close();
 }
 
 function closeMBG(e){if(e.target===document.getElementById("mbg"))closeModal();}
+
+// ── MODULE CHARGES FIXES ───────────────────────────────────────
+function computeMaintenanceMonthTotal(){
+  var ms=tod().slice(0,7);
+  return Object.values(MAINT).filter(function(m){return m.date&&m.date.slice(0,7)===ms;}).reduce(function(s,m){return s+(parseInt(m.cout)||0);},0);
+}
+function getChargeStatut(c){
+  if(c.linked==="maintenance")return "info";
+  var today=new Date();
+  var moisStr=tod().slice(0,7);
+  var dernier=c.dernierPaiement||"";
+  if(c.freq==="annuel"){
+    if(dernier.startsWith(tod().slice(0,4)))return "paye";
+  } else if(c.freq==="trimestriel"){
+    if(dernier){
+      var d=new Date(dernier);
+      var paidQ=Math.floor(d.getMonth()/3)+1;
+      var currQ=Math.floor(today.getMonth()/3)+1;
+      if(d.getFullYear()===today.getFullYear()&&paidQ===currQ)return "paye";
+    }
+  } else {
+    if(dernier.startsWith(moisStr))return "paye";
+  }
+  var echeance=prochEcheance(c);
+  if(!echeance)return "ponctuel";
+  var diffJ=Math.round((echeance-today)/(1000*60*60*24));
+  if(diffJ<0)return "retard";
+  if(diffJ<=7)return "bientot";
+  return "ok";
+}
+function prochEcheance(c){
+  var today=new Date();
+  if(c.freq==="mensuel"){
+    var j=c.jour||1;
+    var e=new Date(today.getFullYear(),today.getMonth(),j);
+    if(e<today)e=new Date(today.getFullYear(),today.getMonth()+1,j);
+    return e;
+  }
+  if(c.freq==="trimestriel"){
+    var qEnds=[
+      new Date(today.getFullYear(),2,31),
+      new Date(today.getFullYear(),5,30),
+      new Date(today.getFullYear(),8,30),
+      new Date(today.getFullYear(),11,31)
+    ];
+    for(var qi=0;qi<qEnds.length;qi++){if(qEnds[qi]>=today)return qEnds[qi];}
+    return new Date(today.getFullYear()+1,2,31);
+  }
+  if(c.freq==="annuel"&&c.mois){
+    var m=parseInt(c.mois)-1;
+    var e2=new Date(today.getFullYear(),m,c.jour||28);
+    if(e2<today)e2=new Date(today.getFullYear()+1,m,c.jour||28);
+    return e2;
+  }
+  return null;
+}
+function joursRestants(c){
+  var e=prochEcheance(c);
+  if(!e)return null;
+  return Math.round((e-new Date())/(1000*60*60*24));
+}
+function updateChargesBadge(){
+  var btn=document.getElementById("tb-charges");
+  if(!btn)return;
+  var nb=Object.values(CHARGES_DATA).filter(function(c){var s=getChargeStatut(c);return s==="retard"||s==="bientot";}).length;
+  var inner="⚡<br>Charges";
+  if(nb>0)inner+="<span style='position:absolute;top:4px;right:4px;background:#dc2626;color:#fff;font-size:8px;font-weight:700;padding:2px 4px;border-radius:8px'>"+nb+"</span>";
+  btn.style.position="relative";
+  btn.innerHTML=inner;
+}
+function renderCharges(){
+  var el=document.getElementById("charges-list");if(!el)return;
+  var alertes=document.getElementById("charges-alertes");
+  var list=Object.values(CHARGES_DATA).filter(function(c){return c.actif!==false;});
+  list.sort(function(a,b){
+    var ord={retard:0,bientot:1,ok:2,paye:3,ponctuel:4};
+    return (ord[getChargeStatut(a)]||5)-(ord[getChargeStatut(b)]||5);
+  });
+  var total=0,payeMois=0,enAttente=0;
+  list.forEach(function(c){
+    var m=c.montant||0;total+=m;
+    var st=getChargeStatut(c);
+    if(st==="paye")payeMois+=m;
+    if(st==="retard"||st==="bientot"||st==="ok")enAttente+=m;
+  });
+  var sumEl=document.getElementById("charges-summary");
+  if(sumEl)sumEl.textContent=list.length+" charges · Payé ce cycle: "+fmt(payeMois)+" · En attente: "+fmt(enAttente);
+  var en_retard=list.filter(function(c){return getChargeStatut(c)==="retard";});
+  var bientot=list.filter(function(c){return getChargeStatut(c)==="bientot";});
+  var al="";
+  if(en_retard.length){
+    al+="<div class='alerte-card'><div><div style='font-weight:700;font-size:13px;color:#dc2626'>🔴 "+en_retard.length+" charge"+(en_retard.length>1?"s":"")+" en retard</div>";
+    al+="<div style='font-size:11px;color:#374151;margin-top:2px'>"+en_retard.map(function(c){return c.nom;}).join(" · ")+"</div></div></div>";
+  }
+  if(bientot.length){
+    al+="<div style='background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:10px 14px;margin-bottom:8px'><div style='font-weight:700;font-size:12px;color:#d97706'>🟡 Échéance dans moins de 7 jours</div>";
+    al+="<div style='font-size:11px;color:#374151;margin-top:2px'>"+bientot.map(function(c){return c.nom+" ("+joursRestants(c)+"j)";}).join(" · ")+"</div></div>";
+  }
+  if(alertes)alertes.innerHTML=al;
+  el.innerHTML=list.map(function(c){
+    var st=getChargeStatut(c);
+    var jr=joursRestants(c);
+    var stLabel=st==="retard"?"🔴 EN RETARD":st==="bientot"?"🟡 BIENTÔT DÛ":st==="paye"?"✅ PAYÉ":st==="ok"?"🟢 À venir":"—";
+    var dlTxt="";
+    if(jr!==null){
+      if(st==="retard")dlTxt="En retard de "+Math.abs(jr)+" jour"+(Math.abs(jr)>1?"s":"");
+      else if(st==="bientot")dlTxt="Dans "+jr+" jour"+(jr>1?"s":"");
+      else if(st==="ok")dlTxt="Prochaine échéance dans "+jr+" jours";
+      else if(st==="paye")dlTxt="Payé — prochain cycle dans "+jr+" jours";
+    }
+    var freqBadge=c.freq==="annuel"?"ANNUEL":c.freq==="mensuel"?"MENSUEL":c.freq==="trimestriel"?"TRIMESTRIEL":"PONCTUEL";
+    var isMaintLinked=c.linked==="maintenance";
+    var isStockLinked=c.linked==="stock";
+    var h="<div class='ch-fix-card "+(isMaintLinked?"ok":st)+" "+(c.freq==="annuel"?"annuel":"")+"'>";
+    h+="<div style='display:flex;justify-content:space-between;align-items:flex-start'>";
+    h+="<div><div class='ch-fix-nom'>"+c.nom+"</div>";
+    h+="<div class='ch-fix-cat'>"+c.cat+" · "+freqBadge+"</div>";
+    if(isMaintLinked){
+      h+="<div class='ch-fix-amt'>"+fmt(computeMaintenanceMonthTotal())+"</div>";
+      h+="<div style='font-size:10px;color:#6b7280;margin-top:2px'>Total des coûts de maintenance ce mois (calculé automatiquement depuis le module Maintenance)</div>";
+    } else {
+      h+="<div class='ch-fix-amt'>"+(c.montant>0?fmt(c.montant):"Montant à définir")+"</div>";
+      if(c.noteAnnuel)h+="<div style='font-size:10px;color:#6b7280;margin-top:2px'>Soit "+fmt(c.noteAnnuel)+"/an, payé en 4 tranches trimestrielles</div>";
+      if(isStockLinked)h+="<div style='font-size:10px;color:#6b7280;margin-top:2px'>Lié au module Stock (fonctionnement ménage)</div>";
+      if(dlTxt)h+="<div class='ch-fix-dl "+st+"'>"+dlTxt+"</div>";
+    }
+    if(c.dernierPaiement)h+="<div style='font-size:10px;color:#6b7280;margin-top:2px'>Dernier paiement: "+fmtD(c.dernierPaiement)+(c.dernierMode?" - "+c.dernierMode:"")+"</div>";
+    h+="</div>";
+    if(!isMaintLinked)h+="<div class='ch-fix-badge' style='background:"+(st==="retard"?"#fee2e2;color:#991b1b":st==="bientot"?"#fef9c3;color:#92400e":st==="paye"?"#d1fae5;color:#065f46":"#e0e7ff;color:#3730a3")+"'>"+stLabel+"</div>";
+    h+="</div>";
+    h+="<div style='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap'>";
+    if(!isMaintLinked&&st!=="paye")h+="<button class='btn' style='background:#059669;color:#fff;flex:1;font-size:11px' onclick='marquerChargePaye(\""+c.id+"\")'>Marquer payé</button>";
+    if(isStockLinked)h+="<button class='btn' style='background:#6366f1;color:#fff;font-size:11px' onclick=\"goTab('stock')\">📦 Voir le Stock</button>";
+    if(isMaintLinked)h+="<button class='btn' style='background:#ea580c;color:#fff;flex:1;font-size:11px' onclick=\"goTab('maintenance')\">🔧 Voir Maintenance</button>";
+    h+="<button class='btn bor-dark' style='flex:0;font-size:11px;padding:8px 12px' onclick='openChargeForm(\""+c.id+"\")'>Modifier</button>";
+    h+="</div></div>";
+    return h;
+  }).join("");
+}
+function marquerChargePaye(id){
+  var c=CHARGES_DATA[id];if(!c)return;
+  var h="<div class='fg'><label>Mode de paiement</label><select id='cg-mode'><option>Espèces</option><option>Orange Money</option><option>MTN MoMo</option><option>Chèque</option><option>Virement</option></select></div>";
+  h+="<div class='fg'><label>Montant réellement payé (F)</label><input type='number' id='cg-amt' value='"+(c.montant||0)+"'/></div>";
+  h+="<div class='fg'><label>Date de paiement</label><input type='date' id='cg-date' value='"+tod()+"'/></div>";
+  h+="<div class='fg'><label>Référence / Reçu (optionnel)</label><input id='cg-ref' placeholder='N° facture ou reçu'/></div>";
+  h+="<button class='btn' style='background:#059669;color:#fff;width:100%' onclick='confirmerChargePaye(\""+id+"\")'>Confirmer le paiement</button>";
+  openModal("Paiement — "+c.nom,h);
+}
+function confirmerChargePaye(id){
+  var c=CHARGES_DATA[id];if(!c)return;
+  var mode=(document.getElementById("cg-mode")||{}).value||"Espèces";
+  var amt=parseInt((document.getElementById("cg-amt")||{}).value)||c.montant||0;
+  var date=(document.getElementById("cg-date")||{}).value||tod();
+  var ref=(document.getElementById("cg-ref")||{}).value||"";
+  db.collection("charges_fixes").doc(id).set({dernierPaiement:date,dernierMode:mode,dernierRef:ref,updatedAt:Date.now()},{merge:true});
+  if(amt>0)addDEP({categorie:"Autre",desc:c.nom+(ref?" ("+ref+")":""),montant:amt,employe:CURRENT_EMP?CURRENT_EMP.nom:EMP[0],date:date});
+  closeModal();
+}
+function openChargeForm(id){
+  var c=id?CHARGES_DATA[id]:null;
+  var h="<div class='fg'><label>Nom de la charge *</label><input id='cgf-nom' value='"+(c?c.nom:"")+"' placeholder='Ex: SOCODEAL — Électricité'/></div>";
+  h+="<div class='fg'><label>Catégorie</label><select id='cgf-cat'>";
+  ["Énergie","Telecom","Taxes","Entretien","Stock","Maintenance","Autre"].forEach(function(cat){h+="<option"+(c&&c.cat===cat?" selected":"")+">"+cat+"</option>";});
+  h+="</select></div>";
+  h+="<div class='fg'><label>Fréquence</label><select id='cgf-freq'>";
+  [{v:"mensuel",l:"Mensuel"},{v:"trimestriel",l:"Trimestriel (tous les 3 mois)"},{v:"annuel",l:"Annuel"},{v:"ponctuel",l:"Ponctuel (irregulier)"}].forEach(function(o){h+="<option value='"+o.v+"'"+(c&&c.freq===o.v?" selected":"")+">"+o.l+"</option>";});
+  h+="</select></div>";
+  h+="<div class='fg'><label>Montant habituel (F — 0 si variable)</label><input type='number' id='cgf-amt' value='"+(c?c.montant||0:0)+"'/></div>";
+  h+="<div class='fg'><label>Jour d'échéance (1-31, 0 si annuel/ponctuel)</label><input type='number' id='cgf-jour' value='"+(c?c.jour||0:0)+"' min='0' max='31'/></div>";
+  h+="<div class='fg'><label>Mois d'échéance (01-12, si annuel)</label><input id='cgf-mois' value='"+(c?c.mois||"":"")+"' placeholder='Ex: 03 pour mars, 12 pour décembre'/></div>";
+  h+="<button class='btn bdark bfull' onclick='saveCharge("+(id?"'"+id+"'":"null")+")'>Enregistrer</button>";
+  openModal(id?"Modifier charge":"Nouvelle charge",h);
+}
+function saveCharge(id){
+  var nom=(document.getElementById("cgf-nom")||{}).value||"";
+  if(!nom.trim()){alert("Le nom est obligatoire.");return;}
+  var data={
+    nom:nom.trim(),
+    cat:(document.getElementById("cgf-cat")||{}).value||"Autre",
+    freq:(document.getElementById("cgf-freq")||{}).value||"mensuel",
+    montant:parseInt((document.getElementById("cgf-amt")||{}).value)||0,
+    jour:parseInt((document.getElementById("cgf-jour")||{}).value)||0,
+    mois:((document.getElementById("cgf-mois")||{}).value||"").trim(),
+    actif:true,updatedAt:Date.now()
+  };
+  if(id){db.collection("charges_fixes").doc(id).set(data,{merge:true});}
+  else{db.collection("charges_fixes").add(data);}
+  closeModal();
+}
+
 
 // ── ACCES PERSONNEL (PIN) ────────────────────────────────────
 function updateDots(){
@@ -1696,7 +2010,9 @@ function grantAccess(emp,id){
   updateEmpBadge();
   document.getElementById("tb-personnel").classList.toggle("hide",CURRENT_EMP.role!=="admin");
   document.getElementById("tb-salaires").classList.toggle("hide",CURRENT_EMP.role!=="admin");
+  document.getElementById("tb-charges").classList.toggle("hide",CURRENT_EMP.role!=="admin");
   applyBarState();
+  updateChargesBadge();
 }
 function showGate(msg){
   document.getElementById("pingate").classList.remove("hide");
