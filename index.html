@@ -775,6 +775,7 @@ function renderCH(){
     h+="<div class='brow'>";
     if(st==="libre")h+="<button class='btn bgreen bsm' onclick='openCI("+num+",null)'>Check-in</button>";
     if(st==="occupee")h+="<button class='btn bred bsm' onclick='doCO("+num+")'>Check-out</button>";
+    if(st==="occupee")h+="<button class='btn bgold bsm' onclick='genererFactureChambre("+num+")'>📄 Facture</button>";
     h+="<button class='btn bor-yel bsm' onclick='togMaint("+num+")'>Maint.</button>";
     h+="</div></div>";
     return h;
@@ -1220,6 +1221,7 @@ function openClientDetail(id){
   h+="<div class='actions-grid'>";
   h+="<div class='action-btn' onclick=\"closeModal();openRezForm(null,CLIENTS['"+id+"'])\" ><div class='ab-icon'>&#128203;</div><div class='ab-label'>Reservation</div></div>";
   h+="<div class='action-btn' onclick='openCIFromClient(\""+id+"\")' style='background:#f0fdf4;border-color:#6ee7b7'><div class='ab-icon'>🛏️</div><div class='ab-label'>Check-in direct</div></div>";
+  h+="<div class='action-btn' onclick='genererFactureClient(\""+id+"\")' style='background:#fffbeb;border-color:#c9a227'><div class='ab-icon'>📄</div><div class='ab-label'>Facture</div></div>";
   if(c.tel)h+="<div class='action-btn' onclick=\"envoyerMerci('"+c.nom+"','"+c.tel+"','')\" ><div class='ab-icon'>💬</div><div class='ab-label'>WhatsApp</div></div>";
   h+="</div>";
   if(histo.length>0){
@@ -1232,6 +1234,7 @@ function openClientDetail(id){
       h+="<div class='sc-info'>"+nuits+" nuit"+(nuits>1?"s":"")+" - "+fmt(prixNuit)+"/nuit</div></div>";
       h+="<div style='text-align:right'><div class='sc-prix'>"+fmt(r.montantTotal||0)+"</div>"+bdg(r.statut)+"</div></div>";
       if(r.notes)h+="<div style='font-size:11px;color:#6b7280;margin-top:6px;background:#fff;border-radius:6px;padding:6px'>"+r.notes+"</div>";
+      h+="<button class='btn bgold bsm' style='margin-top:8px' onclick=\"genererFacture('"+r.id+"')\">📄 Facture de ce séjour</button>";
       h+="</div>";
     });
   } else {
@@ -1269,6 +1272,29 @@ function genererFacture(rezId){
   var r=REZ[rezId];if(!r)return;
   getNextFacNum(function(n){_buildFacture(r,n);});
 }
+function genererFactureChambre(num){
+  var ch=CHAMBRES[num];
+  if(!ch||!ch.client){alert("Aucun client actuellement dans cette chambre.");return;}
+  var data={
+    client:ch.client,tel:ch.tel||"",piece:ch.piece||"",
+    chambre:parseInt(num),checkIn:ch.checkIn||tod(),checkOut:ch.checkOut||tod(),
+    prixNuit:ch.prixNuit||getPD(num),
+    nuits:Math.max(1,diff(ch.checkIn||tod(),ch.checkOut||tod()))
+  };
+  getNextFacNum(function(n){_buildFacture(data,n);});
+}
+function genererFactureClient(clientId){
+  var c=CLIENTS[clientId];if(!c)return;
+  var numOccupe=null;
+  Object.keys(CHAMBRES).forEach(function(k){
+    var ch=CHAMBRES[k];
+    if(ch&&ch.client&&ch.client.toLowerCase()===c.nom.toLowerCase())numOccupe=k;
+  });
+  if(numOccupe){genererFactureChambre(numOccupe);return;}
+  var histo=Object.values(REZ).filter(function(r){return r.client&&r.client.toLowerCase()===c.nom.toLowerCase();}).sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
+  if(histo.length){genererFacture(histo[0].id);return;}
+  alert("Aucun séjour trouvé pour ce client — impossible de générer une facture.");
+}
 function _buildFacture(r,numN){
   var nuits=r.nuits||Math.max(1,diff(r.checkIn||tod(),r.checkOut||tod()));
   var prixNuit=r.prixNuit||getPD(r.chambre);
@@ -1286,7 +1312,7 @@ function _buildFacture(r,numN){
   var totalHT1=hebergement+pDejeun+dejeuner+diner+barCave+locSalle+roomsSvc;
   var remiseMt=Math.round(totalHT1*remisePct/100);
   var totalHT2=totalHT1-remiseMt;
-  var ir=Math.round(totalHT2*0.022);          // IR 2,2%
+  var ir=Math.round(totalHT2*0.055);          // IR 5,5% (conforme au formulaire papier)
   var totalTTC=totalHT2+ir;
   var reste=Math.max(0,totalTTC-acompte);
   var numFac=String(numN).padStart(7,"0");     // 0000209
@@ -1348,8 +1374,10 @@ function _buildFacture(r,numN){
   css+=".sig-line{margin-top:28px;border-top:1px solid #555;padding-top:4px}";
   css+=".ftr-msg{background:#0f3460;color:#fff;text-align:center;padding:8px;font-size:10px}";
 
+  var fileNameFac="Facture_"+numFac+"_"+(r.client||"").replace(/[^a-zA-Z0-9]+/g,"_")+".pdf";
   var h="<!DOCTYPE html><html lang='fr'><head><meta charset='utf-8'/><title>Facture N\u00b0 "+numFac+"</title><style>"+css+"</style></head><body>";
-  h+="<div class='np'><button onclick='window.print()'>Imprimer / PDF</button><button onclick='envWA()'>Envoyer WhatsApp</button></div>";
+  h+="<div class='np'><button onclick='telechargerPDF()'>📥 Télécharger PDF</button><button onclick='window.print()'>Imprimer</button><button onclick='envWA()'>Envoyer WhatsApp</button><button onclick='window.close()' style=\"background:#6b7280\">Fermer</button></div>";
+  h+="<div id='pdf-loading' style='display:none;text-align:center;color:#fff;padding-bottom:6px;font-size:11px'>Génération du PDF…</div>";
   h+="<div class='page'>";
 
   // En-tête
@@ -1391,7 +1419,7 @@ function _buildFacture(r,numN){
   h+="<tr class='total-row'><td>Total H.T. 1</td><td style='text-align:right'>"+fmt(totalHT1)+"</td></tr>";
   h+="<tr class='total-row'><td>Remise ...... "+(remisePct?remisePct+"":"--")+"..%</td><td style='text-align:right'>"+fmt(remiseMt)+"</td></tr>";
   h+="<tr class='total-row'><td>Total H.T. 2</td><td style='text-align:right'>"+fmt(totalHT2)+"</td></tr>";
-  h+="<tr class='total-row'><td>I.R 2,2%</td><td style='text-align:right'>"+fmt(ir)+"</td></tr>";
+  h+="<tr class='total-row'><td>I.R 5,5%</td><td style='text-align:right'>"+fmt(ir)+"</td></tr>";
   h+="<tr class='grand-total'><td>TOTAL T.T.C</td><td style='text-align:right'>"+fmt(totalTTC)+"</td></tr>";
   h+="</tfoot></table>";
 
@@ -1416,11 +1444,31 @@ function _buildFacture(r,numN){
   h+="<div class='ftr-msg'>FIDELIE HOTEL SARL &mdash; RC 0427 &mdash; N\u00b0 Contribuable M089400000018H &mdash; Kribi, Cameroun</div>";
   h+="</div>";
 
-  // Script WhatsApp dans la popup
+  // Script WhatsApp + téléchargement PDF dans la popup
+  h+="<script src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'><\/script>";
+  h+="<script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'><\/script>";
   h+="<script>";
+  h+="function telechargerPDF(){";
+  h+="var el=document.querySelector('.page');";
+  h+="var loading=document.getElementById('pdf-loading');if(loading)loading.style.display='block';";
+  h+="html2canvas(el,{scale:2,useCORS:true}).then(function(canvas){";
+  h+="var imgData=canvas.toDataURL('image/jpeg',0.95);";
+  h+="var pdf=new window.jspdf.jsPDF('p','mm','a4');";
+  h+="var pageWidth=pdf.internal.pageSize.getWidth();";
+  h+="var pageHeight=pdf.internal.pageSize.getHeight();";
+  h+="var imgWidth=pageWidth;";
+  h+="var imgHeight=canvas.height*imgWidth/canvas.width;";
+  h+="var heightLeft=imgHeight;var position=0;";
+  h+="pdf.addImage(imgData,'JPEG',0,position,imgWidth,imgHeight);";
+  h+="heightLeft-=pageHeight;";
+  h+="while(heightLeft>0){position=heightLeft-imgHeight;pdf.addPage();pdf.addImage(imgData,'JPEG',0,position,imgWidth,imgHeight);heightLeft-=pageHeight;}";
+  h+="pdf.save("+JSON.stringify(fileNameFac)+");";
+  h+="if(loading)loading.style.display='none';";
+  h+="}).catch(function(err){if(loading)loading.style.display='none';alert('Erreur lors de la generation du PDF: '+err);});";
+  h+="}";
   h+="var _cl="+JSON.stringify(r.client)+";var _tel="+JSON.stringify(r.tel||"")+";";
-  h+="var _ch="+str(r.chambre)+";var _ci="+JSON.stringify(fmtD(r.checkIn||tod()))+";var _co="+JSON.stringify(fmtD(r.checkOut||tod()))+";";
-  h+="var _n="+str(nuits)+";var _pu="+str(prixNuit)+";var _tot="+str(totalTTC)+";var _ac="+str(acompte)+";var _re="+str(reste)+";";
+  h+="var _ch="+JSON.stringify(r.chambre)+";var _ci="+JSON.stringify(fmtD(r.checkIn||tod()))+";var _co="+JSON.stringify(fmtD(r.checkOut||tod()))+";";
+  h+="var _n="+JSON.stringify(nuits)+";var _pu="+JSON.stringify(prixNuit)+";var _tot="+JSON.stringify(totalTTC)+";var _ac="+JSON.stringify(acompte)+";var _re="+JSON.stringify(reste)+";";
   h+="var _num="+JSON.stringify("N\u00b0 "+numFac)+";";
   h+="function fmt2(n){return Number(n).toLocaleString('fr-FR')+' F';}";
   h+="function normTel2(t){t=String(t||'').replace(/[^\\d+]/g,'').replace(/^\\+/,'');if(t.indexOf('237')===0)return t;if(t.length===9)return '237'+t;if(t.indexOf('0')===0&&t.length===10)return '237'+t.slice(1);return t;}";
