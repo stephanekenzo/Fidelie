@@ -415,6 +415,12 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
 </div>
 <div class="page" id="page-clients">
   <input class="sinput" placeholder="Rechercher par nom, telephone, piece..." oninput="filterCl(this.value)" id="cl-search"/>
+  <div class="filtres" id="clfiltres">
+    <button class="fb active" onclick="setClF('tous',this)">Tous</button>
+    <button class="fb" onclick="setClF('jour',this)">Aujourd'hui</button>
+    <button class="fb" onclick="setClF('semaine',this)">Cette semaine</button>
+    <button class="fb" onclick="setClF('mois',this)">Ce mois</button>
+  </div>
   <div id="cllist"><div class="loading">Chargement...</div></div>
 </div>
 <div class="page" id="page-stock">
@@ -465,6 +471,7 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
     <div class="rapport-card" onclick="genererRapport('clients')"><div class="rapport-icon">👥</div><div class="rapport-title">Clients</div><div class="rapport-desc">Liste et historique</div></div>
     <div class="rapport-card" onclick="genererRapport('maintenance')"><div class="rapport-icon">🔧</div><div class="rapport-title">Maintenance</div><div class="rapport-desc">Tickets et couts</div></div>
     <div class="rapport-card" onclick="genererRapport('stock')"><div class="rapport-icon">📦</div><div class="rapport-title">Stock</div><div class="rapport-desc">Inventaire et alertes</div></div>
+    <div class="rapport-card" onclick="genererRapport('achats')"><div class="rapport-icon">🛒</div><div class="rapport-title">Achats</div><div class="rapport-desc">Achats Stock et Besoins</div></div>
     <div class="rapport-card" onclick="genererRapport('menage')"><div class="rapport-icon">🧹</div><div class="rapport-title">Ménage</div><div class="rapport-desc">Statut des chambres</div></div>
     <div class="rapport-card" onclick="genererRapport('salaires')"><div class="rapport-icon">💵</div><div class="rapport-title">Salaires</div><div class="rapport-desc">Masse salariale du mois</div></div>
     <div class="rapport-card" onclick="genererRapport('charges')"><div class="rapport-icon">⚡</div><div class="rapport-title">Charges</div><div class="rapport-desc">Charges fixes et taxes</div></div>
@@ -1265,8 +1272,24 @@ function suppMaint(id){if(!confirm("Supprimer ce ticket ?"))return;delMAINT(id);
 
 // CLIENTS
 function filterCl(v){clS=v;renderClients();}
+var clF="tous";
+function setClF(f,b){clF=f;document.querySelectorAll("#clfiltres .fb").forEach(function(x){x.classList.remove("active");});b.classList.add("active");renderClients();}
+function groupDateLabel(ts){
+  if(!ts)return"Date inconnue";
+  var d=new Date(ts);
+  var now=new Date();
+  var dJ=new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+  var nJ=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+  var diffJ=Math.round((nJ-dJ)/86400000);
+  if(diffJ===0)return"Aujourd'hui";
+  if(diffJ===1)return"Hier";
+  var lbl=d.toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long",year:d.getFullYear()!==now.getFullYear()?"numeric":undefined});
+  return lbl.charAt(0).toUpperCase()+lbl.slice(1);
+}
 function renderClients(){
   var s=(clS||"").toLowerCase();
+  var now=Date.now();
+  var bornes={jour:86400000,semaine:7*86400000,mois:31*86400000};
   var list=Object.values(CLIENTS).filter(function(c){
     if(!s)return true;
     return(c.nom&&c.nom.toLowerCase().indexOf(s)>=0)||(c.tel&&c.tel.toLowerCase().indexOf(s)>=0)||(c.piece&&c.piece.toLowerCase().indexOf(s)>=0)||(c.ville&&c.ville.toLowerCase().indexOf(s)>=0);
@@ -1276,14 +1299,18 @@ function renderClients(){
     var lastRez=histo.reduce(function(mx,r){return(r.createdAt||0)>mx?(r.createdAt||0):mx;},0);
     c._lastDate=Math.max(lastRez,c.createdAt||0);
   });
+  if(clF!=="tous"&&bornes[clF]){list=list.filter(function(c){return(now-(c._lastDate||0))<=bornes[clF];});}
   list.sort(function(a,b){return(b._lastDate||0)-(a._lastDate||0);});
   if(!list.length){document.getElementById("cllist").innerHTML="<div style='text-align:center;color:#9ca3af;padding:40px'>Aucun client trouve</div>";return;}
-  document.getElementById("cllist").innerHTML=list.map(function(c){
+  var html="",lastGroup=null;
+  list.forEach(function(c){
+    var grp=groupDateLabel(c._lastDate);
+    if(grp!==lastGroup){html+="<div class='fsep' style='margin-top:18px'>"+grp+"</div>";lastGroup=grp;}
     var enSejour=false;
     Object.values(REZ).forEach(function(r){if(r.client&&r.client.toLowerCase()===c.nom.toLowerCase()&&r.statut==="check-in")enSejour=true;});
     var histo=Object.values(REZ).filter(function(r){return r.client&&r.client.toLowerCase()===c.nom.toLowerCase();}).sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
     var ds=histo[0];
-    return"<div class='cl-card' onclick=\"openClientDetail('"+c.id+"')\">"
+    html+="<div class='cl-card' onclick=\"openClientDetail('"+c.id+"')\">"
       +"<div style='display:flex;justify-content:space-between;align-items:flex-start'>"
       +"<div style='flex:1'><div style='font-weight:800;font-size:15px;color:#1a1a2e'>"+c.nom+"</div>"
       +"<div style='font-size:12px;color:#6b7280;margin-top:3px'>"+(c.tel?"Tel: "+c.tel+"  ":"")+(c.ville?"| "+c.ville:"")+"</div>"
@@ -1291,7 +1318,8 @@ function renderClients(){
       +"<div style='font-size:11px;color:#6b7280;margin-top:4px'>"+(c.sejours||0)+" sejour"+((c.sejours||0)>1?"s":"")+(ds?" - Dernier: Ch."+ds.chambre+" "+fmtD(ds.checkIn):"")+"</div></div>"
       +"<div style='text-align:right;min-width:80px'><div style='font-weight:800;color:#059669;font-size:15px'>"+fmt(c.totalDepense||0)+"</div>"
       +(enSejour?"<div style='background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px;font-size:10px;margin-top:4px;font-weight:700'>En sejour</div>":"")+"</div></div></div>";
-  }).join("");
+  });
+  document.getElementById("cllist").innerHTML=html;
 }
 function openClientDetail(id){
   var c=CLIENTS[id];if(!c)return;
@@ -1668,7 +1696,7 @@ function inP(date,debut,fin){return date&&date>=debut&&date<=fin;}
 function genererRapport(type){
   var p=getPeriodeDates();
   var texte=buildRapport(type,p.debut,p.fin);
-  var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",menage:"Rapport Menage",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
+  var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",achats:"Rapport Achats",menage:"Rapport Menage",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
   var h="<div style='background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:14px;margin-bottom:14px'>";
   h+="<div style='font-size:11px;color:#065f46;font-weight:700;margin-bottom:4px'>APERCU</div>";
   h+="<pre style='font-size:11px;color:#374151;white-space:pre-wrap;line-height:1.6;max-height:260px;overflow-y:auto'>"+texte+"</pre></div>";
@@ -1680,7 +1708,7 @@ function buildRapport(type,debut,fin){
   var now=new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});
   var L="================================";
   var t="FIDELIE HOTEL SARL - KRIBI\n"+L+"\n";
-  var titres={synthese:"SYNTHESE GENERALE",caisse:"RAPPORT CAISSE",reservations:"RAPPORT RESERVATIONS",chambres:"RAPPORT CHAMBRES",depenses:"RAPPORT DEPENSES",clients:"RAPPORT CLIENTS",maintenance:"RAPPORT MAINTENANCE",stock:"RAPPORT STOCK",menage:"RAPPORT MENAGE",salaires:"RAPPORT SALAIRES",charges:"RAPPORT CHARGES",personnel:"RAPPORT PERSONNEL"};
+  var titres={synthese:"SYNTHESE GENERALE",caisse:"RAPPORT CAISSE",reservations:"RAPPORT RESERVATIONS",chambres:"RAPPORT CHAMBRES",depenses:"RAPPORT DEPENSES",clients:"RAPPORT CLIENTS",maintenance:"RAPPORT MAINTENANCE",stock:"RAPPORT STOCK",achats:"RAPPORT ACHATS",menage:"RAPPORT MENAGE",salaires:"RAPPORT SALAIRES",charges:"RAPPORT CHARGES",personnel:"RAPPORT PERSONNEL"};
   t+=(titres[type]||"RAPPORT")+"\n";
   t+="Periode: "+fmtD(debut)+" au "+fmtD(fin)+"\nGenere le: "+now+"\n"+L+"\n\n";
   var txArr=Object.values(TX).filter(function(x){return inP(x.date,debut,fin);});
@@ -1763,9 +1791,28 @@ function buildRapport(type,debut,fin){
     chArr.forEach(function(c){
       var s=getChargeStatut(c);
       var lbl=s==="retard"?"EN RETARD":s==="bientot"?"BIENTOT DU":s==="paye"?"PAYE":s==="info"?"AUTO (module lie)":s==="ok"?"A VENIR":"PONCTUEL";
-      var m=c.linked==="maintenance"?computeMaintenanceMonthTotal():c.montant;
+      var m=c.linked==="maintenance"?computeMaintenanceMonthTotal():c.linked==="stock"?computeStockMonthTotal():c.montant;
       t+="  "+c.nom+" ["+c.cat+"] - "+(m>0?fmt(m):"--")+" - "+lbl+"\n";
     });
+  } else if(type==="achats"){
+    var movArr=Object.values(STK_MOV).filter(function(m){return m.type==="achat"&&inP(m.date,debut,fin);}).sort(function(a,b){return(a.date||"").localeCompare(b.date||"");});
+    var besArr=Object.values(BESOINS).filter(function(b){return b.statut==="achete"&&inP(b.dateAchat||b.date,debut,fin);}).sort(function(a,b){return(a.dateAchat||"").localeCompare(b.dateAchat||"");});
+    var totMov=movArr.reduce(function(s,m){return s+(parseInt(m.montant)||0);},0);
+    var totBes=besArr.reduce(function(s,b){return s+(parseInt(b.prixEstime)||0);},0);
+    t+="TOTAL ACHATS STOCK: "+fmt(totMov)+" ("+movArr.length+" achat"+(movArr.length>1?"s":"")+")\n";
+    t+="TOTAL BESOINS ACHETES: "+fmt(totBes)+" ("+besArr.length+" article"+(besArr.length>1?"s":"")+")\n";
+    t+="TOTAL GENERAL: "+fmt(totMov+totBes)+"\n\n";
+    if(movArr.length){
+      t+="ACHATS STOCK\n";
+      movArr.forEach(function(m){t+="  "+fmtD(m.date)+" - "+m.stockNom+" x"+m.qte+" "+(m.unite||"")+" @ "+fmt(m.prixUnit||0)+" = "+fmt(m.montant||0)+"\n";});
+      t+="\n";
+    }
+    if(besArr.length){
+      t+="BESOINS ACHETES\n";
+      besArr.forEach(function(b){t+="  "+fmtD(b.dateAchat||b.date)+" - "+b.nom+" x"+(b.qte||1)+" "+(b.unite||"")+" - "+fmt(b.prixEstime||0)+" ["+(b.categorie||"autre")+"]\n";});
+      t+="\n";
+    }
+    if(!movArr.length&&!besArr.length)t+="Aucun achat enregistre sur cette periode.\n";
   } else if(type==="personnel"){
     var pl=Object.values(EMPLOYES).sort(function(a,b){return(a.nom||"").localeCompare(b.nom||"");});
     t+="TOTAL EMPLOYES: "+pl.length+"\n\n";
@@ -1805,7 +1852,7 @@ function letterheadHTML(title){
 }
 function imprimerRap(type){
   var p=getPeriodeDates();var texte=buildRapport(type,p.debut,p.fin);
-  var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",menage:"Rapport Menage",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
+  var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",achats:"Rapport Achats",menage:"Rapport Menage",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
   var titre=titres[type]||"Rapport";
   CURRENT_PDF_FILENAME=titre.replace(/[^a-zA-Z0-9]+/g,"_")+"_"+tod()+".pdf";
   var h="<div class='doc-actions'>";
