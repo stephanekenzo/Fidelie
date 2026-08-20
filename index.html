@@ -303,6 +303,7 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
   <button class="tab-btn" onclick="goTab('maintenance')" id="tb-maintenance">🔧<br>Maint.<span class="tbadge hide" id="bdgmaint">0</span></button>
   <button class="tab-btn" onclick="goTab('clients')" id="tb-clients">👥<br>Clients</button>
   <button class="tab-btn" onclick="goTab('stock')" id="tb-stock">📦<br>Stock<span class="tbadge hide" id="bdgstk">0</span></button>
+  <button class="tab-btn" onclick="goTab('besoins')" id="tb-besoins">🛒<br>Besoins<span class="tbadge hide" id="bdgbes">0</span></button>
   <button class="tab-btn" onclick="goTab('rapports')" id="tb-rapports">📊<br>Rapports</button>
   <button class="tab-btn" onclick="goTab('menage')" id="tb-menage">🧹<br>Ménage</button>
   <button class="tab-btn hide" onclick="goTab('salaires')" id="tb-salaires">💵<br>Salaires</button>
@@ -420,6 +421,20 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
   <div id="stkalerts"></div>
   <button class="btn bdark bfull" style="margin-bottom:12px" onclick="openStockForm()">+ Nouvel article</button>
   <div id="stklist"><div class="loading">Chargement...</div></div>
+</div>
+<div class="page" id="page-besoins">
+  <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:14px;padding:16px;color:#fff;margin-bottom:14px">
+    <div style="font-size:11px;opacity:.6;text-transform:uppercase;letter-spacing:1px">Fidelie Hotel — Besoins</div>
+    <div style="font-size:20px;font-weight:900;margin-top:4px" id="bes-total">0 F</div>
+    <div style="font-size:12px;opacity:.7;margin-top:2px">Total restant à acheter</div>
+  </div>
+  <button class="btn bdark bfull" style="margin-bottom:12px" onclick="openBesoinForm(null)">+ Nouveau besoin</button>
+  <div class="filtres" id="besfiltres">
+    <button class="fb active" onclick="setBF('a_acheter',this)">À acheter</button>
+    <button class="fb" onclick="setBF('achete',this)">Achetés</button>
+    <button class="fb" onclick="setBF('tous',this)">Tous</button>
+  </div>
+  <div id="beslist"><div class="loading">Chargement...</div></div>
 </div>
 <div class="page" id="page-rapports">
   <div style="background:linear-gradient(135deg,#1a1a2e,#0f3460);border-radius:14px;padding:16px;color:#fff;margin-bottom:16px">
@@ -562,9 +577,10 @@ var STK_DEF=[
   {nom:"Eau de Javel",qte:15,seuil:3,unite:"L"},{nom:"Serviettes bain",qte:55,seuil:20,unite:"pcs"},
   {nom:"Draps",qte:40,seuil:15,unite:"jeux"},{nom:"Desinfectant",qte:8,seuil:2,unite:"L"}
 ];
-var CHAMBRES={},REZ={},TX={},DEP={},MAINT={},STK={},CLIENTS={},EMPLOYES={},CHARGES_DATA={};
+var CHAMBRES={},REZ={},TX={},DEP={},MAINT={},STK={},CLIENTS={},EMPLOYES={},CHARGES_DATA={},BESOINS={},STK_MOV={};
 var EMP_SEEDED=false,CURRENT_EMP=null,pgBuffer="";
 var STK_SEED_CHECKED=false,AMBROISE_ADMIN_CHECKED=false,CHARGES_SEEDED=false;
+var editBesoinId=null;
 var CHARGES_SEED=[
   {nom:"SOCODEAL — Electricite (Courant)",          cat:"Energie",   freq:"mensuel",     montant:0,      jour:15, mois:"",   actif:true},
   {nom:"Camtel — Wifi",                             cat:"Telecom",   freq:"mensuel",     montant:0,      jour:10, mois:"",   actif:true},
@@ -697,6 +713,14 @@ function startListeners(){
     }
     renderStk();upHdr();
   },function(){setSB("err");});
+  db.collection("stock_mouvements").orderBy("createdAt","desc").onSnapshot(function(snap){
+    STK_MOV={};snap.forEach(function(d){STK_MOV[d.id]=Object.assign({},d.data(),{id:d.id});});
+    renderCharges();
+  },function(){});
+  db.collection("besoins").orderBy("createdAt","desc").onSnapshot(function(snap){
+    BESOINS={};snap.forEach(function(d){BESOINS[d.id]=Object.assign({},d.data(),{id:d.id});});
+    renderBesoins();upHdr();
+  },function(){});
   db.collection("clients").onSnapshot(function(snap){
     CLIENTS={};snap.forEach(function(d){CLIENTS[d.id]=Object.assign({},d.data(),{id:d.id});});
     renderClients();
@@ -753,6 +777,12 @@ function saveSTK(id,data){
   return db.collection("stock").add(Object.assign({},data,{createdAt:Date.now()}));
 }
 function delSTK(id){return db.collection("stock").doc(String(id)).delete();}
+function addStockMouvement(data){return db.collection("stock_mouvements").add(Object.assign({},data,{createdAt:Date.now()}));}
+function saveBESOIN(id,data){
+  if(id)return db.collection("besoins").doc(String(id)).set(Object.assign({},data,{updatedAt:Date.now()}),{merge:true});
+  return db.collection("besoins").add(Object.assign({},data,{createdAt:Date.now()}));
+}
+function delBESOIN(id){return db.collection("besoins").doc(String(id)).delete();}
 function updREZSt(id,st){return db.collection("reservations").doc(String(id)).set({statut:st,updatedAt:Date.now()},{merge:true});}
 function delREZ(id){return db.collection("reservations").doc(String(id)).delete();}
 function saveMAINT(id,data){
@@ -796,6 +826,7 @@ function goTab(id){
   if(id==="menage")renderMenage();
   if(id==="salaires")renderSalaires();
   if(id==="charges")renderCharges();
+  if(id==="besoins")renderBesoins();
 }
 
 // CHAMBRES
@@ -1312,16 +1343,128 @@ function renderStk(){
   document.getElementById("stkalerts").innerHTML=al.length?"<div class='alerte acr' style='margin-bottom:14px'><h4>Stock bas ("+al.length+")</h4>"+al.map(function(s){return"<p>"+s.nom+": "+s.qte+" "+s.unite+"</p>";}).join("")+"</div>":"";
   document.getElementById("stklist").innerHTML=Object.values(STK).map(function(s){
     var pct=Math.min(100,(s.qte/Math.max(s.seuil*3,1))*100),bas=s.qte<=s.seuil;
-    return"<div class='card' onclick=\"openStkEdit('"+s.id+"')\" style='cursor:pointer;"+(bas?"border-color:#fecdd3;background:#fff1f2":"")+"'>"
+    return"<div class='card' style='"+(bas?"border-color:#fecdd3;background:#fff1f2":"")+"'>"
+      +"<div onclick=\"openStkEdit('"+s.id+"')\" style='cursor:pointer'>"
       +"<div style='display:flex;justify-content:space-between;margin-bottom:7px'><span style='font-weight:600;font-size:14px'>"+s.nom+"</span><span style='font-weight:800;font-size:14px;color:"+(bas?"#be123c":"#059669")+"'>"+s.qte+" "+s.unite+"</span></div>"
       +"<div class='sbar'><div class='sfill' style='width:"+pct+"%;background:"+(bas?"#ef4444":"#22c55e")+"' ></div></div>"
-      +"<div style='font-size:11px;color:#9ca3af;margin-top:2px'>Seuil: "+s.seuil+" "+s.unite+"</div></div>";
+      +"<div style='font-size:11px;color:#9ca3af;margin-top:2px'>Seuil: "+s.seuil+" "+s.unite+(s.prixUnit?" · "+fmt(s.prixUnit)+"/"+s.unite:"")+"</div></div>"
+      +"<div style='display:flex;gap:8px;margin-top:8px'>"
+      +"<button class='btn bgreen' style='flex:1;font-size:11px;padding:7px' onclick=\"event.stopPropagation();openStkMouvement('"+s.id+"','achat')\">+ Achat</button>"
+      +"<button class='btn bor-dark' style='flex:1;font-size:11px;padding:7px' onclick=\"event.stopPropagation();openStkMouvement('"+s.id+"','sortie')\">− Sortie</button>"
+      +"</div></div>";
   }).join("");
 }
-function openStockForm(){editStkId=null;var h="<div class='fg'><label>Nom *</label><input id='sf-n' placeholder='Savon de bain'/></div><div class='frow'><div class='fg'><label>Quantite</label><input type='number' id='sf-q' value='0'/></div><div class='fg'><label>Seuil alerte</label><input type='number' id='sf-s' value='0'/></div></div><div class='fg'><label>Unite</label><input id='sf-u' value='pcs'/></div><button class='btn bdark bfull' onclick='saveStk()'>Enregistrer</button>";openModal("Nouvel article",h);}
-function openStkEdit(id){editStkId=id;var s=STK[id];var h="<div class='fg'><label>Nom</label><input id='sf-n' value='"+s.nom+"'/></div><div class='frow'><div class='fg'><label>Quantite</label><input type='number' id='sf-q' value='"+s.qte+"'/></div><div class='fg'><label>Seuil alerte</label><input type='number' id='sf-s' value='"+s.seuil+"'/></div></div><div class='fg'><label>Unite</label><input id='sf-u' value='"+s.unite+"'/></div><div style='display:flex;gap:8px'><button class='btn bdark bfull' onclick='saveStk()'>Enregistrer</button><button class='btn bor-red' onclick=\"delStk('"+id+"')\" >Suppr.</button></div>";openModal("Modifier - "+s.nom,h);}
-function saveStk(){var nom=gv("sf-n").trim();if(!nom){alert("Entre un nom.");return;}saveSTK(editStkId,{nom:nom,qte:gi("sf-q"),seuil:gi("sf-s"),unite:gv("sf-u")||"pcs"});closeModal();}
+function openStockForm(){editStkId=null;var h="<div class='fg'><label>Nom *</label><input id='sf-n' placeholder='Savon de bain'/></div><div class='frow'><div class='fg'><label>Quantite</label><input type='number' id='sf-q' value='0'/></div><div class='fg'><label>Seuil alerte</label><input type='number' id='sf-s' value='0'/></div></div><div class='frow'><div class='fg'><label>Unite</label><input id='sf-u' value='pcs'/></div><div class='fg'><label>Prix unitaire (F)</label><input type='number' id='sf-p' value='0'/></div></div><button class='btn bdark bfull' onclick='saveStk()'>Enregistrer</button>";openModal("Nouvel article",h);}
+function openStkEdit(id){editStkId=id;var s=STK[id];var h="<div class='fg'><label>Nom</label><input id='sf-n' value='"+s.nom+"'/></div><div class='frow'><div class='fg'><label>Quantite</label><input type='number' id='sf-q' value='"+s.qte+"'/></div><div class='fg'><label>Seuil alerte</label><input type='number' id='sf-s' value='"+s.seuil+"'/></div></div><div class='frow'><div class='fg'><label>Unite</label><input id='sf-u' value='"+s.unite+"'/></div><div class='fg'><label>Prix unitaire (F)</label><input type='number' id='sf-p' value='"+(s.prixUnit||0)+"'/></div></div><div style='display:flex;gap:8px'><button class='btn bdark bfull' onclick='saveStk()'>Enregistrer</button><button class='btn bor-red' onclick=\"delStk('"+id+"')\" >Suppr.</button></div>";openModal("Modifier - "+s.nom,h);}
+function saveStk(){var nom=gv("sf-n").trim();if(!nom){alert("Entre un nom.");return;}saveSTK(editStkId,{nom:nom,qte:gi("sf-q"),seuil:gi("sf-s"),unite:gv("sf-u")||"pcs",prixUnit:gi("sf-p")});closeModal();}
 function delStk(id){if(!confirm("Supprimer cet article ?"))return;delSTK(id);closeModal();}
+function openStkMouvement(id,type){
+  var s=STK[id];if(!s)return;
+  var titre=type==="achat"?"Achat — "+s.nom:"Sortie — "+s.nom;
+  var h="<div class='fg'><label>Quantite ("+s.unite+")</label><input type='number' id='mv-q' value='1' min='0.01' step='0.01'/></div>";
+  if(type==="achat")h+="<div class='fg'><label>Prix unitaire (F)</label><input type='number' id='mv-p' value='"+(s.prixUnit||0)+"'/></div>";
+  h+="<div class='fg'><label>Date</label><input type='date' id='mv-d' value='"+tod()+"'/></div>";
+  h+="<button class='btn "+(type==="achat"?"bgreen":"bdark")+" bfull' onclick=\"saveStkMouvement('"+id+"','"+type+"')\">Enregistrer</button>";
+  openModal(titre,h);
+}
+function saveStkMouvement(id,type){
+  var s=STK[id];if(!s)return;
+  var qte=parseFloat(gv("mv-q"))||0;if(qte<=0){alert("Quantite invalide.");return;}
+  var date=gv("mv-d")||tod();
+  var data={stockId:id,stockNom:s.nom,type:type,qte:qte,unite:s.unite,date:date};
+  if(type==="achat"){
+    var prixUnit=parseFloat(gv("mv-p"))||0;
+    data.prixUnit=prixUnit;data.montant=Math.round(qte*prixUnit);
+    saveSTK(id,{qte:(s.qte||0)+qte,prixUnit:prixUnit||s.prixUnit||0});
+  } else {
+    saveSTK(id,{qte:Math.max(0,(s.qte||0)-qte)});
+  }
+  addStockMouvement(data);
+  closeModal();
+}
+function computeStockMonthTotal(){
+  var ms=tod().slice(0,7);
+  return Object.values(STK_MOV).filter(function(m){return m.type==="achat"&&m.date&&m.date.slice(0,7)===ms;}).reduce(function(s,m){return s+(parseInt(m.montant)||0);},0);
+}
+
+// ── MODULE BESOINS ─────────────────────────────────────────────
+var besF="a_acheter";
+function setBF(f,b){besF=f;document.querySelectorAll("#besfiltres .fb").forEach(function(x){x.classList.remove("active");});b.classList.add("active");renderBesoins();}
+function renderBesoins(){
+  var elTot=document.getElementById("bes-total");
+  var list=Object.values(BESOINS);
+  if(elTot){
+    var totalRestant=list.filter(function(b){return b.statut!=="achete";}).reduce(function(s,b){return s+(parseInt(b.prixEstime)||0);},0);
+    elTot.textContent=fmt(totalRestant);
+  }
+  var badge=document.getElementById("bdgbes");
+  var nbAcheter=list.filter(function(b){return b.statut!=="achete";}).length;
+  if(badge){badge.textContent=nbAcheter;badge.classList.toggle("hide",!nbAcheter);}
+  var filtered=list.filter(function(b){
+    if(besF==="tous")return true;
+    if(besF==="a_acheter")return b.statut!=="achete";
+    return b.statut==="achete";
+  }).sort(function(a,b){return(b.createdAt||0)-(a.createdAt||0);});
+  var el=document.getElementById("beslist");if(!el)return;
+  if(!filtered.length){el.innerHTML="<div style='text-align:center;color:#9ca3af;padding:40px'>Aucun besoin ici</div>";return;}
+  var catLabels={stock:"📦 Stock",maintenance:"🔧 Maintenance",autre:"📋 Autre"};
+  var catColors={stock:"#e0e7ff;color:#3730a3",maintenance:"#fed7aa;color:#9a3412",autre:"#f3f4f6;color:#374151"};
+  el.innerHTML=filtered.map(function(b){
+    var achete=b.statut==="achete";
+    var h="<div class='card' style='"+(achete?"opacity:.6":"")+"'>";
+    h+="<div style='display:flex;justify-content:space-between;align-items:flex-start'>";
+    h+="<div><div style='font-weight:700;font-size:14px;"+(achete?"text-decoration:line-through":"")+"'>"+b.nom+"</div>";
+    h+="<div style='font-size:11px;color:#6b7280;margin-top:2px'>"+(b.qte||1)+" "+(b.unite||"")+" · "+fmtD(b.date||tod())+"</div>";
+    h+="<span class='ch-fix-badge' style='background:"+(catColors[b.categorie]||catColors.autre)+";margin-top:4px;display:inline-block'>"+(catLabels[b.categorie]||catLabels.autre)+"</span>";
+    h+="</div><div style='text-align:right'><div style='font-weight:800;color:#0f3460'>"+fmt(b.prixEstime||0)+"</div></div></div>";
+    h+="<div style='display:flex;gap:8px;margin-top:10px'>";
+    if(!achete)h+="<button class='btn bgreen' style='flex:1;font-size:11px' onclick=\"marquerBesoinAchete('"+b.id+"')\">✓ Marquer acheté</button>";
+    h+="<button class='btn bor-dark' style='font-size:11px;padding:8px 12px' onclick=\"openBesoinForm('"+b.id+"')\">Modifier</button>";
+    h+="</div></div>";
+    return h;
+  }).join("");
+}
+function openBesoinForm(id){
+  editBesoinId=id;var b=id?BESOINS[id]:null;
+  var h="<div class='fg'><label>Nom *</label><input id='bs-n' value='"+(b?b.nom:"")+"' placeholder='ex: Interrupteur'/></div>";
+  h+="<div class='frow'><div class='fg'><label>Quantite</label><input type='number' id='bs-q' value='"+(b?b.qte:1)+"'/></div><div class='fg'><label>Unite</label><input id='bs-u' value='"+(b?b.unite||"":"pcs")+"'/></div></div>";
+  h+="<div class='frow'><div class='fg'><label>Prix estime (F)</label><input type='number' id='bs-p' value='"+(b?b.prixEstime||0:0)+"'/></div><div class='fg'><label>Categorie</label><select id='bs-c'>"+opt(["stock","maintenance","autre"],b?b.categorie:"stock")+"</select></div></div>";
+  h+="<div class='fg'><label>Date</label><input type='date' id='bs-d' value='"+(b?b.date||tod():tod())+"'/></div>";
+  h+="<button class='btn bdark bfull' style='margin-bottom:8px' onclick='saveBesoin()'>Enregistrer</button>";
+  if(id)h+="<button class='btn bor-red bfull' onclick=\"delBesoin('"+id+"')\" >Supprimer</button>";
+  openModal(id?"Modifier besoin":"Nouveau besoin",h);
+}
+function saveBesoin(){
+  var nom=gv("bs-n").trim();if(!nom){alert("Entre un nom.");return;}
+  var data={nom:nom,qte:parseFloat(gv("bs-q"))||1,unite:gv("bs-u")||"pcs",prixEstime:gi("bs-p"),categorie:gv("bs-c")||"autre",date:gv("bs-d")||tod()};
+  if(!editBesoinId)data.statut="a_acheter";
+  saveBESOIN(editBesoinId,data);
+  closeModal();
+}
+function delBesoin(id){if(!confirm("Supprimer ce besoin ?"))return;delBESOIN(id);closeModal();}
+function marquerBesoinAchete(id){
+  var b=BESOINS[id];if(!b)return;
+  if(b.categorie==="stock"){
+    // Chercher un article Stock existant du meme nom (insensible a la casse)
+    var existant=null,existantId=null;
+    Object.keys(STK).forEach(function(sid){if(STK[sid].nom.toLowerCase().trim()===b.nom.toLowerCase().trim()){existant=STK[sid];existantId=sid;}});
+    var prixUnit=b.qte?Math.round((b.prixEstime||0)/b.qte):(b.prixEstime||0);
+    if(existant){
+      saveSTK(existantId,{qte:(existant.qte||0)+(b.qte||1),prixUnit:prixUnit||existant.prixUnit||0});
+      addStockMouvement({stockId:existantId,stockNom:existant.nom,type:"achat",qte:b.qte||1,unite:b.unite||existant.unite,prixUnit:prixUnit,montant:b.prixEstime||0,date:tod()});
+    } else {
+      saveSTK(null,{nom:b.nom,qte:b.qte||1,seuil:1,unite:b.unite||"pcs",prixUnit:prixUnit}).then(function(ref){
+        addStockMouvement({stockId:ref.id,stockNom:b.nom,type:"achat",qte:b.qte||1,unite:b.unite||"pcs",prixUnit:prixUnit,montant:b.prixEstime||0,date:tod()});
+      });
+    }
+  } else if(b.categorie==="maintenance"){
+    saveMAINT(null,{titre:b.nom,desc:"Ajoute depuis le module Besoins",priorite:"moyenne",statut:"resolu",date:tod(),technicien:"",cout:b.prixEstime||0});
+    if(b.prixEstime>0)addDEP({categorie:"Entretien",desc:"Besoin: "+b.nom,montant:b.prixEstime,employe:EMP[0]||"",date:tod()});
+  } else {
+    if(b.prixEstime>0)addDEP({categorie:"Fonctionnement",desc:"Besoin: "+b.nom,montant:b.prixEstime,employe:EMP[0]||"",date:tod()});
+  }
+  saveBESOIN(id,{statut:"achete",dateAchat:tod()});
+}
 
 // FACTURE PDF
 function genererFacture(rezId){
@@ -1871,7 +2014,7 @@ function computeMaintenanceMonthTotal(){
   return Object.values(MAINT).filter(function(m){return m.date&&m.date.slice(0,7)===ms;}).reduce(function(s,m){return s+(parseInt(m.cout)||0);},0);
 }
 function getChargeStatut(c){
-  if(c.linked==="maintenance")return "info";
+  if(c.linked==="maintenance"||c.linked==="stock")return "info";
   var today=new Date();
   var moisStr=tod().slice(0,7);
   var dernier=c.dernierPaiement||"";
@@ -1977,25 +2120,27 @@ function renderCharges(){
     var freqBadge=c.freq==="annuel"?"ANNUEL":c.freq==="mensuel"?"MENSUEL":c.freq==="trimestriel"?"TRIMESTRIEL":"PONCTUEL";
     var isMaintLinked=c.linked==="maintenance";
     var isStockLinked=c.linked==="stock";
-    var h="<div class='ch-fix-card "+(isMaintLinked?"ok":st)+" "+(c.freq==="annuel"?"annuel":"")+"'>";
+    var h="<div class='ch-fix-card "+((isMaintLinked||isStockLinked)?"ok":st)+" "+(c.freq==="annuel"?"annuel":"")+"'>";
     h+="<div style='display:flex;justify-content:space-between;align-items:flex-start'>";
     h+="<div><div class='ch-fix-nom'>"+c.nom+"</div>";
     h+="<div class='ch-fix-cat'>"+c.cat+" · "+freqBadge+"</div>";
     if(isMaintLinked){
       h+="<div class='ch-fix-amt'>"+fmt(computeMaintenanceMonthTotal())+"</div>";
       h+="<div style='font-size:10px;color:#6b7280;margin-top:2px'>Total des coûts de maintenance ce mois (calculé automatiquement depuis le module Maintenance)</div>";
+    } else if(isStockLinked){
+      h+="<div class='ch-fix-amt'>"+fmt(computeStockMonthTotal())+"</div>";
+      h+="<div style='font-size:10px;color:#6b7280;margin-top:2px'>Total des achats Stock ce mois (calculé automatiquement depuis le module Stock)</div>";
     } else {
       h+="<div class='ch-fix-amt'>"+(c.montant>0?fmt(c.montant):"Montant à définir")+"</div>";
       if(c.noteAnnuel)h+="<div style='font-size:10px;color:#6b7280;margin-top:2px'>Soit "+fmt(c.noteAnnuel)+"/an, payé en 4 tranches trimestrielles</div>";
-      if(isStockLinked)h+="<div style='font-size:10px;color:#6b7280;margin-top:2px'>Lié au module Stock (fonctionnement ménage)</div>";
       if(dlTxt)h+="<div class='ch-fix-dl "+st+"'>"+dlTxt+"</div>";
     }
     if(c.dernierPaiement)h+="<div style='font-size:10px;color:#6b7280;margin-top:2px'>Dernier paiement: "+fmtD(c.dernierPaiement)+(c.dernierMode?" - "+c.dernierMode:"")+"</div>";
     h+="</div>";
-    if(!isMaintLinked)h+="<div class='ch-fix-badge' style='background:"+(st==="retard"?"#fee2e2;color:#991b1b":st==="bientot"?"#fef9c3;color:#92400e":st==="paye"?"#d1fae5;color:#065f46":"#e0e7ff;color:#3730a3")+"'>"+stLabel+"</div>";
+    if(!isMaintLinked&&!isStockLinked)h+="<div class='ch-fix-badge' style='background:"+(st==="retard"?"#fee2e2;color:#991b1b":st==="bientot"?"#fef9c3;color:#92400e":st==="paye"?"#d1fae5;color:#065f46":"#e0e7ff;color:#3730a3")+"'>"+stLabel+"</div>";
     h+="</div>";
     h+="<div style='display:flex;gap:8px;margin-top:10px;flex-wrap:wrap'>";
-    if(!isMaintLinked&&st!=="paye")h+="<button class='btn' style='background:#059669;color:#fff;flex:1;font-size:11px' onclick='marquerChargePaye(\""+c.id+"\")'>Marquer payé</button>";
+    if(!isMaintLinked&&!isStockLinked&&st!=="paye")h+="<button class='btn' style='background:#059669;color:#fff;flex:1;font-size:11px' onclick='marquerChargePaye(\""+c.id+"\")'>Marquer payé</button>";
     if(isStockLinked)h+="<button class='btn' style='background:#6366f1;color:#fff;font-size:11px' onclick=\"goTab('stock')\">📦 Voir le Stock</button>";
     if(isMaintLinked)h+="<button class='btn' style='background:#ea580c;color:#fff;flex:1;font-size:11px' onclick=\"goTab('maintenance')\">🔧 Voir Maintenance</button>";
     h+="<button class='btn bor-dark' style='flex:0;font-size:11px;padding:8px 12px' onclick='openChargeForm(\""+c.id+"\")'>Modifier</button>";
