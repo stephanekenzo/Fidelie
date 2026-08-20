@@ -1362,7 +1362,7 @@ function _buildFacture(r,numN){
   var totalHT1=hebergement+pDejeun+dejeuner+diner+barCave+locSalle+roomsSvc;
   var remiseMt=Math.round(totalHT1*remisePct/100);
   var totalHT2=totalHT1-remiseMt;
-  var ir=Math.round(totalHT2*0.055);          // IR 5,5% (conforme au formulaire papier)
+  var ir=Math.round(totalHT2*0.022);          // IR 2,2%
   var totalTTC=totalHT2+ir;
   var reste=Math.max(0,totalTTC-acompte);
   var numFac=String(numN).padStart(7,"0");     // 0000209
@@ -1402,7 +1402,7 @@ function _buildFacture(r,numN){
 
   // En-tête
   h+="<div class='fac-hdr-top'>";
-  h+="<div class='fac-logo-area'><img src='"+LOGO_B64+"'/><div><div class='fac-hotel-name'>FIDELIE HOTEL SARL</div><div class='fac-hotel-sub'>H\u00e9bergement &ndash; Bar Restaurent &ndash; Salle de Conf\u00e9rence &ndash; Parking &ndash; Wifi</div><div class='fac-hotel-sub'>N\u00b0 Contribuable: M089400000018H</div><div class='fac-hotel-sub'>B.P 298 KRIBI CAMEROUN | Rue Mahalet Nziou</div><div class='fac-hotel-sub'>www.fidelie-hotel.com | info@fidelie-hotel.com</div><div class='fac-hotel-sub'>655 931 027 | 679 349 327 | 691 921 851</div></div></div>";
+  h+="<div class='fac-logo-area'><img src='"+LOGO_B64+"'/><div><div class='fac-hotel-name'>FIDELIE HOTEL SARL</div><div class='fac-hotel-sub'>H\u00e9bergement &ndash; Bar Restaurent &ndash; Salle de Conf\u00e9rence &ndash; Parking &ndash; Wifi</div><div class='fac-hotel-sub'>N\u00b0 Contribuable: M089400000018H &nbsp;|&nbsp; RC: 0427</div><div class='fac-hotel-sub'>B.P 298 KRIBI CAMEROUN | Rue Mahalet Nziou</div><div class='fac-hotel-sub'>www.fidelie-hotel.com | info@fidelie-hotel.com</div><div class='fac-hotel-sub'>655 931 027 | 679 349 327 | 691 921 851</div></div></div>";
   h+="<div class='fac-hdr-right'><div class='fac-title'>FACTURE / NOTE D'H\u00d4TEL</div><div class='fac-num'>N\u00b0 "+numFac+"</div></div></div>";
 
   // Infos client + dates
@@ -1439,7 +1439,7 @@ function _buildFacture(r,numN){
   h+="<tr class='total-row'><td>Total H.T. 1</td><td style='text-align:right'>"+fmt(totalHT1)+"</td></tr>";
   h+="<tr class='total-row'><td>Remise ...... "+(remisePct?remisePct+"":"--")+"..%</td><td style='text-align:right'>"+fmt(remiseMt)+"</td></tr>";
   h+="<tr class='total-row'><td>Total H.T. 2</td><td style='text-align:right'>"+fmt(totalHT2)+"</td></tr>";
-  h+="<tr class='total-row'><td>I.R 5,5%</td><td style='text-align:right'>"+fmt(ir)+"</td></tr>";
+  h+="<tr class='total-row'><td>I.R 2,2%</td><td style='text-align:right'>"+fmt(ir)+"</td></tr>";
   h+="<tr class='grand-total'><td>TOTAL T.T.C</td><td style='text-align:right'>"+fmt(totalTTC)+"</td></tr>";
   h+="</tfoot></table>";
 
@@ -1461,7 +1461,7 @@ function _buildFacture(r,numN){
   h+="<div style='font-size:9px;color:#0f3460;text-align:center;align-self:flex-end'>La Direction et le personnel de FIDELIE HOTEL vous remercient</div>";
   h+="<div style='text-align:center'><div class='fac-sig-line'>Signature Caissier</div></div></div>";
 
-  h+="<div class='fac-ftr-msg'>FIDELIE HOTEL SARL &mdash; N\u00b0 Contribuable M089400000018H &mdash; Kribi, Cameroun</div>";
+  h+="<div class='fac-ftr-msg'>FIDELIE HOTEL SARL &mdash; RC 0427 &mdash; N\u00b0 Contribuable M089400000018H &mdash; Kribi, Cameroun</div>";
   h+="</div>";
 
   openModal("Facture N\u00b0 "+numFac,h);
@@ -1646,7 +1646,7 @@ function letterheadHTML(title){
   h+="<div class='lh-name'>FIDELIE HOTEL SARL</div>";
   h+="<div class='lh-line'>HEBERGEMENT &ndash; BAR RESTAURENT &ndash; SALLE DE CONFERENCE</div>";
   h+="<div class='lh-line'>PARKING &ndash; WIFI</div>";
-  h+="<div class='lh-sub'>N&deg; CONTRIBUABLE: M089400000018H</div>";
+  h+="<div class='lh-sub'>N&deg; CONTRIBUABLE: M089400000018H &nbsp;|&nbsp; RC: 0427</div>";
   h+="<div class='lh-sub'>B.P 298 KRIBI CAMEROUN | RUE MAHALET NZIOU</div>";
   h+="<div class='lh-web'>www.fidelie-hotel.com | info@fidelie-hotel.com</div>";
   h+="<div class='lh-line'>655 931 027| 679 349 327 | 691 921 851</div>";
