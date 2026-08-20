@@ -1239,7 +1239,13 @@ function renderClients(){
   var list=Object.values(CLIENTS).filter(function(c){
     if(!s)return true;
     return(c.nom&&c.nom.toLowerCase().indexOf(s)>=0)||(c.tel&&c.tel.toLowerCase().indexOf(s)>=0)||(c.piece&&c.piece.toLowerCase().indexOf(s)>=0)||(c.ville&&c.ville.toLowerCase().indexOf(s)>=0);
-  }).sort(function(a,b){return(b.totalDepense||0)-(a.totalDepense||0);});
+  });
+  list.forEach(function(c){
+    var histo=Object.values(REZ).filter(function(r){return r.client&&r.client.toLowerCase()===c.nom.toLowerCase();});
+    var lastRez=histo.reduce(function(mx,r){return(r.createdAt||0)>mx?(r.createdAt||0):mx;},0);
+    c._lastDate=Math.max(lastRez,c.createdAt||0);
+  });
+  list.sort(function(a,b){return(b._lastDate||0)-(a._lastDate||0);});
   if(!list.length){document.getElementById("cllist").innerHTML="<div style='text-align:center;color:#9ca3af;padding:40px'>Aucun client trouve</div>";return;}
   document.getElementById("cllist").innerHTML=list.map(function(c){
     var enSejour=false;
