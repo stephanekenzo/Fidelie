@@ -467,15 +467,15 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
     <div class="rapport-card" onclick="genererRapport('caisse')"><div class="rapport-icon">&#128176;</div><div class="rapport-title">Caisse</div><div class="rapport-desc">Toutes les recettes</div></div>
     <div class="rapport-card" onclick="genererRapport('reservations')"><div class="rapport-icon">&#128203;</div><div class="rapport-title">Reservations</div><div class="rapport-desc">Sejours et check-ins</div></div>
     <div class="rapport-card" onclick="genererRapport('chambres')"><div class="rapport-icon">🛏️</div><div class="rapport-title">Chambres</div><div class="rapport-desc">Etat et occupation</div></div>
-    <div class="rapport-card" onclick="genererRapport('depenses')"><div class="rapport-icon">💸</div><div class="rapport-title">Depenses</div><div class="rapport-desc">Toutes les sorties</div></div>
+    <div class="rapport-card" id="rc-depenses" onclick="genererRapport('depenses')"><div class="rapport-icon">💸</div><div class="rapport-title">Depenses</div><div class="rapport-desc">Toutes les sorties</div></div>
     <div class="rapport-card" onclick="genererRapport('clients')"><div class="rapport-icon">👥</div><div class="rapport-title">Clients</div><div class="rapport-desc">Liste et historique</div></div>
     <div class="rapport-card" onclick="genererRapport('maintenance')"><div class="rapport-icon">🔧</div><div class="rapport-title">Maintenance</div><div class="rapport-desc">Tickets et couts</div></div>
     <div class="rapport-card" onclick="genererRapport('stock')"><div class="rapport-icon">📦</div><div class="rapport-title">Stock</div><div class="rapport-desc">Inventaire et alertes</div></div>
     <div class="rapport-card" onclick="genererRapport('achats')"><div class="rapport-icon">🛒</div><div class="rapport-title">Achats</div><div class="rapport-desc">Achats Stock et Besoins</div></div>
     <div class="rapport-card" onclick="genererRapport('menage')"><div class="rapport-icon">🧹</div><div class="rapport-title">Ménage</div><div class="rapport-desc">Statut des chambres</div></div>
-    <div class="rapport-card" onclick="genererRapport('salaires')"><div class="rapport-icon">💵</div><div class="rapport-title">Salaires</div><div class="rapport-desc">Masse salariale du mois</div></div>
-    <div class="rapport-card" onclick="genererRapport('charges')"><div class="rapport-icon">⚡</div><div class="rapport-title">Charges</div><div class="rapport-desc">Charges fixes et taxes</div></div>
-    <div class="rapport-card" onclick="genererRapport('personnel')"><div class="rapport-icon">🔑</div><div class="rapport-title">Personnel</div><div class="rapport-desc">Liste des employés</div></div>
+    <div class="rapport-card" id="rc-salaires" onclick="genererRapport('salaires')"><div class="rapport-icon">💵</div><div class="rapport-title">Salaires</div><div class="rapport-desc">Masse salariale du mois</div></div>
+    <div class="rapport-card" id="rc-charges" onclick="genererRapport('charges')"><div class="rapport-icon">⚡</div><div class="rapport-title">Charges</div><div class="rapport-desc">Charges fixes et taxes</div></div>
+    <div class="rapport-card" id="rc-personnel" onclick="genererRapport('personnel')"><div class="rapport-icon">🔑</div><div class="rapport-title">Personnel</div><div class="rapport-desc">Liste des employés</div></div>
   </div>
 </div>
 <!-- PAGE CHARGES FIXES -->
@@ -825,7 +825,9 @@ function upHdr(){
   document.getElementById("mopen").textContent=mo;
   document.getElementById("mclosed").textContent=Object.values(MAINT).filter(function(m){return m.statut==="resolu";}).length;
 }
+var TABS_RESTREINTS=["depenses","salaires","charges","personnel"];
 function goTab(id){
+  if(TABS_RESTREINTS.indexOf(id)>=0&&(!CURRENT_EMP||CURRENT_EMP.role!=="admin")){alert("Accès réservé à la direction.");return;}
   document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
   document.querySelectorAll(".tab-btn").forEach(function(b){b.classList.remove("active");});
   document.getElementById("page-"+id).classList.add("active");
@@ -1694,6 +1696,7 @@ function getPeriodeDates(){
 }
 function inP(date,debut,fin){return date&&date>=debut&&date<=fin;}
 function genererRapport(type){
+  if(TABS_RESTREINTS.indexOf(type)>=0&&(!CURRENT_EMP||CURRENT_EMP.role!=="admin")){alert("Accès réservé à la direction.");return;}
   var p=getPeriodeDates();
   var texte=buildRapport(type,p.debut,p.fin);
   var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",achats:"Rapport Achats",menage:"Rapport Menage",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
@@ -1824,6 +1827,7 @@ function buildRapport(type,debut,fin){
   return t;
 }
 function envoyerRapWA(type){
+  if(TABS_RESTREINTS.indexOf(type)>=0&&(!CURRENT_EMP||CURRENT_EMP.role!=="admin")){alert("Accès réservé à la direction.");return;}
   var p=getPeriodeDates();var texte=buildRapport(type,p.debut,p.fin);
   var h="<div class='fg'><label>Numero WhatsApp</label><input id='rap-tel' placeholder='+237...' type='tel'/></div>";
   h+="<div class='fg'><label>Message</label><textarea class='whats-msg' id='rap-msg' style='min-height:120px'>"+texte+"</textarea></div>";
@@ -1851,6 +1855,7 @@ function letterheadHTML(title){
   return h;
 }
 function imprimerRap(type){
+  if(TABS_RESTREINTS.indexOf(type)>=0&&(!CURRENT_EMP||CURRENT_EMP.role!=="admin")){alert("Accès réservé à la direction.");return;}
   var p=getPeriodeDates();var texte=buildRapport(type,p.debut,p.fin);
   var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",achats:"Rapport Achats",menage:"Rapport Menage",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
   var titre=titres[type]||"Rapport";
@@ -2284,9 +2289,9 @@ function grantAccess(emp,id){
   document.getElementById("pingate").classList.add("hide");
   pgBuffer="";updateDots();
   updateEmpBadge();
-  document.getElementById("tb-personnel").classList.toggle("hide",CURRENT_EMP.role!=="admin");
-  document.getElementById("tb-salaires").classList.toggle("hide",CURRENT_EMP.role!=="admin");
-  document.getElementById("tb-charges").classList.toggle("hide",CURRENT_EMP.role!=="admin");
+  var isAdmin=CURRENT_EMP.role==="admin";
+  ["tb-personnel","tb-salaires","tb-charges","tb-depenses"].forEach(function(id2){var el=document.getElementById(id2);if(el)el.classList.toggle("hide",!isAdmin);});
+  ["rc-depenses","rc-salaires","rc-charges","rc-personnel"].forEach(function(id2){var el=document.getElementById(id2);if(el)el.classList.toggle("hide",!isAdmin);});
   applyBarState();
   updateChargesBadge();
 }
