@@ -473,6 +473,7 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
     <div class="rapport-card" onclick="genererRapport('stock')"><div class="rapport-icon">📦</div><div class="rapport-title">Stock</div><div class="rapport-desc">Inventaire et alertes</div></div>
     <div class="rapport-card" onclick="genererRapport('achats')"><div class="rapport-icon">🛒</div><div class="rapport-title">Achats</div><div class="rapport-desc">Achats Stock et Besoins</div></div>
     <div class="rapport-card" onclick="genererRapport('menage')"><div class="rapport-icon">🧹</div><div class="rapport-title">Ménage</div><div class="rapport-desc">Statut des chambres</div></div>
+    <div class="rapport-card" onclick="genererRapport('factures')"><div class="rapport-icon">🧾</div><div class="rapport-title">Factures</div><div class="rapport-desc">Générées / envoyées au client</div></div>
     <div class="rapport-card" id="rc-salaires" onclick="genererRapport('salaires')"><div class="rapport-icon">💵</div><div class="rapport-title">Salaires</div><div class="rapport-desc">Masse salariale du mois</div></div>
     <div class="rapport-card" id="rc-charges" onclick="genererRapport('charges')"><div class="rapport-icon">⚡</div><div class="rapport-title">Charges</div><div class="rapport-desc">Charges fixes et taxes</div></div>
     <div class="rapport-card" id="rc-personnel" onclick="genererRapport('personnel')"><div class="rapport-icon">🔑</div><div class="rapport-title">Personnel</div><div class="rapport-desc">Liste des employés</div></div>
@@ -586,20 +587,21 @@ var STK_DEF=[
 ];
 var CHAMBRES={},REZ={},TX={},DEP={},MAINT={},STK={},CLIENTS={},EMPLOYES={},CHARGES_DATA={},BESOINS={},STK_MOV={};
 var EMP_SEEDED=false,CURRENT_EMP=null,pgBuffer="";
-var STK_SEED_CHECKED=false,AMBROISE_ADMIN_CHECKED=false,CHARGES_SEEDED=false;
+var STK_SEED_CHECKED=false,AMBROISE_ADMIN_CHECKED=false,CHARGES_SEEDED=false,CHARGES_MIGR_CHECKED=false;
 var editBesoinId=null;
 var CHARGES_SEED=[
   {nom:"SOCODEAL — Electricite (Courant)",          cat:"Energie",   freq:"mensuel",     montant:0,      jour:15, mois:"",   actif:true},
-  {nom:"Camtel — Wifi",                             cat:"Telecom",   freq:"mensuel",     montant:0,      jour:10, mois:"",   actif:true},
-  {nom:"Swecom — Cable",                            cat:"Telecom",   freq:"mensuel",     montant:0,      jour:5,  mois:"",   actif:true},
+  {nom:"Camtel — Wifi",                             cat:"Telecom",   freq:"mensuel",     montant:0,      jour:10, mois:"",   actif:true, note:"Dette initiale de 40 000 F a solder, puis 16 500 F/mois une fois la dette soldee."},
+  {nom:"Swecom — Cable",                            cat:"Telecom",   freq:"mensuel",     montant:0,      jour:5,  mois:"",   actif:true, note:"Dette initiale de 15 000 F a solder, puis 15 000 F/mois."},
   {nom:"Canal+ — Bar + Suite 117",                  cat:"Telecom",   freq:"mensuel",     montant:15000,  jour:5,  mois:"",   actif:true},
   {nom:"Groupe electrogene — Gasoil",               cat:"Energie",   freq:"ponctuel",    montant:0,      jour:0,  mois:"",   actif:true},
   {nom:"Jardin — Entretien",                        cat:"Entretien", freq:"mensuel",     montant:0,      jour:1,  mois:"",   actif:true},
   {nom:"Cadastre — Taxe fonciere",                  cat:"Taxes",     freq:"annuel",      montant:0,      jour:31, mois:"03", actif:true},
   {nom:"Patente / Impot liberatoire",               cat:"Taxes",     freq:"annuel",      montant:0,      jour:31, mois:"03", actif:true},
   {nom:"IGS — Impot General Synthetique (cat. 8)", cat:"Taxes",     freq:"trimestriel", montant:137500, jour:31, mois:"",   actif:true, noteAnnuel:550000},
-  {nom:"Fonctionnement — Stock menage",             cat:"Stock",     freq:"mensuel",     montant:44000,  jour:1,  mois:"",   actif:true, linked:"stock"},
-  {nom:"Maintenance — Reparations & interventions", cat:"Maintenance",freq:"mensuel",    montant:0,      jour:1,  mois:"",   actif:true, linked:"maintenance"}
+  {nom:"Fonctionnement — Stock menage",             cat:"Stock",     freq:"mensuel",     montant:0,      jour:1,  mois:"",   actif:true, linked:"stock"},
+  {nom:"Maintenance — Reparations & interventions", cat:"Maintenance",freq:"mensuel",    montant:0,      jour:1,  mois:"",   actif:true, linked:"maintenance"},
+  {nom:"Les tenues et gadgets",                     cat:"Autre",     freq:"ponctuel",    montant:0,      jour:0,  mois:"",   actif:true, note:"A programmer."}
 ];
 var BAR_OUVERT=false;
 var HORS_SVC=[103,105,106,107,108,109];
@@ -745,6 +747,18 @@ function startListeners(){
     if(Object.keys(CHARGES_DATA).length===0&&!CHARGES_SEEDED){
       CHARGES_SEEDED=true;
       CHARGES_SEED.forEach(function(c){db.collection("charges_fixes").add(c);});
+    } else if(Object.keys(CHARGES_DATA).length>0&&!CHARGES_MIGR_CHECKED){
+      CHARGES_MIGR_CHECKED=true;
+      db.collection("config").doc("seeds").get().then(function(doc){
+        if(doc.exists&&doc.data().chargesV2)return;
+        var byNom={};Object.values(CHARGES_DATA).forEach(function(c){byNom[c.nom]=c;});
+        var camtel=byNom["Camtel — Wifi"];
+        if(camtel&&!camtel.note)db.collection("charges_fixes").doc(camtel.id).set({note:"Dette initiale de 40 000 F a solder, puis 16 500 F/mois une fois la dette soldee."},{merge:true});
+        var swecom=byNom["Swecom — Cable"];
+        if(swecom&&!swecom.note)db.collection("charges_fixes").doc(swecom.id).set({note:"Dette initiale de 15 000 F a solder, puis 15 000 F/mois."},{merge:true});
+        if(!byNom["Les tenues et gadgets"])db.collection("charges_fixes").add({nom:"Les tenues et gadgets",cat:"Autre",freq:"ponctuel",montant:0,jour:0,mois:"",note:"A programmer.",actif:true});
+        db.collection("config").doc("seeds").set({chargesV2:true},{merge:true});
+      });
     }
     renderCharges();
     updateChargesBadge();
@@ -1499,7 +1513,7 @@ function marquerBesoinAchete(id){
 // FACTURE PDF
 function genererFacture(rezId){
   var r=REZ[rezId];if(!r)return;
-  getNextFacNum(function(n){_buildFacture(r,n);});
+  getNextFacNum(function(n){_buildFacture(Object.assign({},r,{id:rezId}),n);});
 }
 function genererFactureChambre(num){
   var ch=CHAMBRES[num];
@@ -1569,8 +1583,9 @@ function _buildFacture(r,numN){
     cl:r.client,tel:r.tel||"",ch:r.chambre,
     ci:fmtD(r.checkIn||tod()),co:fmtD(r.checkOut||tod()),
     n:nuits,pu:prixNuit,tot:totalTTC,ac:acompte,re:reste,
-    num:"N\u00b0 "+numFac
+    num:"N\u00b0 "+numFac,rid:r.id||null
   };
+  if(r.id)saveREZ(r.id,{factureGeneree:true,numFacture:numFac,factureDate:tod()});
 
   var h="<div class='doc-actions'>";
   h+="<button id='doc-pdf-btn' class='gold' onclick=\"telechargerDocPDF()\">📥 Télécharger PDF</button>";
@@ -1658,6 +1673,7 @@ function envoyerFactureWA(){
   var t=normTel(d.tel);
   if(t&&t.length>=11){window.open("https://wa.me/"+t+"?text="+encodeURIComponent(msg),"_blank");}
   else{var dest=prompt("Numero WhatsApp du destinataire (+237...)");if(dest){window.open("https://wa.me/"+normTel(dest)+"?text="+encodeURIComponent(msg),"_blank");}}
+  if(d.rid)saveREZ(d.rid,{factureEnvoyee:true,factureEnvoyeeDate:tod()});
 }
 function telechargerDocPDF(){
   var el=document.getElementById("doc-pdf-content");
@@ -1699,7 +1715,7 @@ function genererRapport(type){
   if(TABS_RESTREINTS.indexOf(type)>=0&&(!CURRENT_EMP||CURRENT_EMP.role!=="admin")){alert("Accès réservé à la direction.");return;}
   var p=getPeriodeDates();
   var texte=buildRapport(type,p.debut,p.fin);
-  var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",achats:"Rapport Achats",menage:"Rapport Menage",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
+  var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",achats:"Rapport Achats",menage:"Rapport Menage",factures:"Rapport Factures",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
   var h="<div style='background:#f0fdf4;border:2px solid #bbf7d0;border-radius:12px;padding:14px;margin-bottom:14px'>";
   h+="<div style='font-size:11px;color:#065f46;font-weight:700;margin-bottom:4px'>APERCU</div>";
   h+="<pre style='font-size:11px;color:#374151;white-space:pre-wrap;line-height:1.6;max-height:260px;overflow-y:auto'>"+texte+"</pre></div>";
@@ -1711,7 +1727,7 @@ function buildRapport(type,debut,fin){
   var now=new Date().toLocaleDateString("fr-FR",{day:"2-digit",month:"long",year:"numeric"});
   var L="================================";
   var t="FIDELIE HOTEL SARL - KRIBI\n"+L+"\n";
-  var titres={synthese:"SYNTHESE GENERALE",caisse:"RAPPORT CAISSE",reservations:"RAPPORT RESERVATIONS",chambres:"RAPPORT CHAMBRES",depenses:"RAPPORT DEPENSES",clients:"RAPPORT CLIENTS",maintenance:"RAPPORT MAINTENANCE",stock:"RAPPORT STOCK",achats:"RAPPORT ACHATS",menage:"RAPPORT MENAGE",salaires:"RAPPORT SALAIRES",charges:"RAPPORT CHARGES",personnel:"RAPPORT PERSONNEL"};
+  var titres={synthese:"SYNTHESE GENERALE",caisse:"RAPPORT CAISSE",reservations:"RAPPORT RESERVATIONS",chambres:"RAPPORT CHAMBRES",depenses:"RAPPORT DEPENSES",clients:"RAPPORT CLIENTS",maintenance:"RAPPORT MAINTENANCE",stock:"RAPPORT STOCK",achats:"RAPPORT ACHATS",menage:"RAPPORT MENAGE",factures:"RAPPORT FACTURES",salaires:"RAPPORT SALAIRES",charges:"RAPPORT CHARGES",personnel:"RAPPORT PERSONNEL"};
   t+=(titres[type]||"RAPPORT")+"\n";
   t+="Periode: "+fmtD(debut)+" au "+fmtD(fin)+"\nGenere le: "+now+"\n"+L+"\n\n";
   var txArr=Object.values(TX).filter(function(x){return inP(x.date,debut,fin);});
@@ -1722,6 +1738,16 @@ function buildRapport(type,debut,fin){
     var tD=depArr.reduce(function(s,x){return s+x.montant;},0);
     var occ=CH_NUMS.filter(function(n){return getSt(n)==="occupee";}).length;
     t+="OCCUPATION\n  Occupees: "+occ+"/27 | Libres: "+(27-occ)+"\n\n";
+    var tMaint=Object.values(MAINT).filter(function(m){return m.date&&inP(m.date,debut,fin);}).reduce(function(s,m){return s+(parseInt(m.cout)||0);},0);
+    var besArrP=Object.values(BESOINS).filter(function(b){return b.statut==="achete"&&inP(b.dateAchat||b.date,debut,fin);});
+    var tBes=besArrP.reduce(function(s,b){return s+(parseInt(b.prixEstime)||0);},0);
+    var tStockAch=Object.values(STK_MOV).filter(function(m){return m.type==="achat"&&inP(m.date,debut,fin);}).reduce(function(s,m){return s+(parseInt(m.montant)||0);},0);
+    t+="DETAIL DEPENSES\n";
+    t+="  Besoins achetes:       "+fmt(tBes)+" ("+besArrP.length+" article"+(besArrP.length>1?"s":"")+")\n";
+    t+="  Achats Stock:          "+fmt(tStockAch)+"\n";
+    t+="  Maintenance:           "+fmt(tMaint)+"\n";
+    t+="  Autres depenses:       "+fmt(Math.max(0,tD-tBes-tStockAch-tMaint))+"\n";
+    t+="  TOTAL DEPENSES:        "+fmt(tD)+"\n\n";
     t+="FINANCES\n  Total recettes:   "+fmt(tR)+"\n";
     t+="  - Chambres:       "+fmt(txArr.filter(function(x){return x.type==="Chambre";}).reduce(function(s,x){return s+x.montant;},0))+"\n";
     t+="  - Bar/Resto:      "+fmt(txArr.filter(function(x){return x.type==="Restaurant"||x.type==="Bar";}).reduce(function(s,x){return s+x.montant;},0))+"\n";
@@ -1769,6 +1795,25 @@ function buildRapport(type,debut,fin){
     t+="TOTAL: "+stkArr.length+" | ALERTES: "+bas.length+"\n\n";
     if(bas.length){t+="STOCK BAS:\n";bas.forEach(function(s){t+="  *** "+s.nom+": "+s.qte+" "+s.unite+" (seuil: "+s.seuil+")\n";});t+="\n";}
     t+="INVENTAIRE:\n";stkArr.sort(function(a,b){return a.nom.localeCompare(b.nom);}).forEach(function(s){t+="  "+s.nom+": "+s.qte+" "+s.unite+"\n";});
+    t+="\n";
+    var sortiesChArr=Object.values(STK_MOV).filter(function(m){return m.type==="sortie"&&m.chambre&&inP(m.date,debut,fin);});
+    var chNettoyees=Object.keys(NETTOYAGE).filter(function(n){return NETTOYAGE[n].date&&inP(NETTOYAGE[n].date,debut,fin)&&NETTOYAGE[n].statut==="propre";});
+    var chOccupees=Object.values(REZ).filter(function(r){return r.statut==="check-in"&&(inP(r.checkIn,debut,fin)||inP(r.checkOut,debut,fin));}).map(function(r){return r.chambre;});
+    t+="CORRELATION CHAMBRES / STOCK\n";
+    t+="  Chambres logees sur la periode: "+chOccupees.length+"\n";
+    t+="  Chambres nettoyees sur la periode: "+chNettoyees.length+"\n";
+    t+="  Chambres avec sortie de stock enregistree: "+(new Set(sortiesChArr.map(function(m){return m.chambre;}))).size+"\n\n";
+    if(sortiesChArr.length){
+      var parCh={};
+      sortiesChArr.forEach(function(m){parCh[m.chambre]=parCh[m.chambre]||[];parCh[m.chambre].push(m);});
+      Object.keys(parCh).sort(function(a,b){return a-b;}).forEach(function(num){
+        t+="  Ch."+num+":\n";
+        parCh[num].forEach(function(m){t+="    "+fmtD(m.date)+" - "+m.stockNom+" x"+m.qte+" "+(m.unite||"")+"\n";});
+      });
+      t+="\n";
+    } else {
+      t+="  Aucune sortie de stock liee a une chambre sur cette periode (utilise 'Marquer propre' dans Menage pour enregistrer les produits utilises).\n\n";
+    }
   } else if(type==="menage"){
     var cnts={a_nettoyer:0,en_cours:0,propre:0};
     CH_NUMS.forEach(function(n){var s=getNettSt(n);cnts[s]=(cnts[s]||0)+1;});
@@ -1816,6 +1861,29 @@ function buildRapport(type,debut,fin){
       t+="\n";
     }
     if(!movArr.length&&!besArr.length)t+="Aucun achat enregistre sur cette periode.\n";
+  } else if(type==="factures"){
+    var stays=Object.values(REZ).filter(function(r){return r.statut!=="annulee"&&(inP(r.checkIn,debut,fin)||inP(r.checkOut,debut,fin));}).sort(function(a,b){return(a.checkOut||"").localeCompare(b.checkOut||"");});
+    var sansFacture=stays.filter(function(r){return !r.factureGeneree;});
+    var nonEnvoyees=stays.filter(function(r){return r.factureGeneree&&!r.factureEnvoyee;});
+    var ok=stays.filter(function(r){return r.factureGeneree&&r.factureEnvoyee;});
+    t+="TOTAL SEJOURS: "+stays.length+"\n";
+    t+="  Facture generee et envoyee: "+ok.length+"\n";
+    t+="  Facture generee, PAS envoyee: "+nonEnvoyees.length+"\n";
+    t+="  SANS FACTURE GENEREE: "+sansFacture.length+"\n\n";
+    if(sansFacture.length){
+      t+="*** A FACTURER ***\n";
+      sansFacture.forEach(function(r){t+="  Ch."+r.chambre+" - "+r.client+" - "+fmtD(r.checkIn)+" au "+fmtD(r.checkOut)+" - "+fmt(r.montantTotal||0)+"\n";});
+      t+="\n";
+    }
+    if(nonEnvoyees.length){
+      t+="*** FACTUREE MAIS NON ENVOYEE AU CLIENT ***\n";
+      nonEnvoyees.forEach(function(r){t+="  Ch."+r.chambre+" - "+r.client+" - N\u00b0"+(r.numFacture||"?")+" (le "+fmtD(r.factureDate||"")+")"+(r.tel?" - Tel: "+r.tel:"")+"\n";});
+      t+="\n";
+    }
+    if(ok.length){
+      t+="FACTUREES ET ENVOYEES:\n";
+      ok.forEach(function(r){t+="  Ch."+r.chambre+" - "+r.client+" - N\u00b0"+(r.numFacture||"?")+"\n";});
+    }
   } else if(type==="personnel"){
     var pl=Object.values(EMPLOYES).sort(function(a,b){return(a.nom||"").localeCompare(b.nom||"");});
     t+="TOTAL EMPLOYES: "+pl.length+"\n\n";
@@ -1857,7 +1925,7 @@ function letterheadHTML(title){
 function imprimerRap(type){
   if(TABS_RESTREINTS.indexOf(type)>=0&&(!CURRENT_EMP||CURRENT_EMP.role!=="admin")){alert("Accès réservé à la direction.");return;}
   var p=getPeriodeDates();var texte=buildRapport(type,p.debut,p.fin);
-  var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",achats:"Rapport Achats",menage:"Rapport Menage",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
+  var titres={synthese:"Synthese generale",caisse:"Rapport Caisse",reservations:"Rapport Reservations",chambres:"Rapport Chambres",depenses:"Rapport Depenses",clients:"Rapport Clients",maintenance:"Rapport Maintenance",stock:"Rapport Stock",achats:"Rapport Achats",menage:"Rapport Menage",factures:"Rapport Factures",salaires:"Rapport Salaires",charges:"Rapport Charges",personnel:"Rapport Personnel"};
   var titre=titres[type]||"Rapport";
   CURRENT_PDF_FILENAME=titre.replace(/[^a-zA-Z0-9]+/g,"_")+"_"+tod()+".pdf";
   var h="<div class='doc-actions'>";
@@ -1910,9 +1978,9 @@ function renderMenage(){
     if(n.notes)h+="<div style='font-size:10px;color:#6b7280;margin-top:2px;font-style:italic'>"+n.notes+"</div>";
     h+="<div style='display:flex;gap:6px;margin-top:8px;flex-wrap:wrap'>";
     if(st==="a_nettoyer")h+="<button class='men-btn' style='background:#fde68a;color:#92400e' onclick='startNettoyage("+num+")'>Commencer</button>";
-    if(st==="en_cours")h+="<button class='men-btn' style='background:#6ee7b7;color:#065f46' onclick='finirNettoyage("+num+")'>Marquer propre</button>";
+    if(st==="en_cours")h+="<button class='men-btn' style='background:#6ee7b7;color:#065f46' onclick='openFinirNettoyage("+num+")'>Marquer propre</button>";
     if(st==="propre")h+="<button class='men-btn' style='background:#e5e7eb;color:#374151' onclick='resetNettoyage("+num+")'>A nettoyer</button>";
-    if(CURRENT_EMP&&CURRENT_EMP.role==="admin")h+="<button class='men-btn' style='background:#e0e7ff;color:#3730a3;max-width:80px' onclick='editNettoyageNote("+num+")'>Note</button>";
+    if(CURRENT_EMP)h+="<button class='men-btn' style='background:#e0e7ff;color:#3730a3;max-width:80px' onclick='editNettoyageNote("+num+")'>Note</button>";
     h+="</div></div>";
     return h;
   }).join("");
@@ -1922,10 +1990,33 @@ function startNettoyage(num){
   var now=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
   fidelieDB().collection("nettoyage").doc(String(num)).set({statut:"en_cours",par:emp,heure:now,date:tod(),notes:(NETTOYAGE[num]||{}).notes||"",updatedAt:Date.now()},{merge:true});
 }
+function openFinirNettoyage(num){
+  var arts=Object.values(STK).sort(function(a,b){return a.nom.localeCompare(b.nom);});
+  var h="<div style='font-size:12px;color:#6b7280;margin-bottom:10px'>Produits utilisés pour la chambre "+num+" (optionnel — laisse à 0 si aucun) :</div>";
+  if(!arts.length)h+="<div style='font-size:12px;color:#9ca3af;margin-bottom:10px'>Aucun article en Stock.</div>";
+  arts.forEach(function(s){
+    h+="<div class='frow' style='align-items:center;margin-bottom:6px'>"
+      +"<div style='flex:2;font-size:12px'>"+s.nom+" <span style='color:#9ca3af'>("+s.unite+")</span></div>"
+      +"<input type='number' class='fn-item' data-id='"+s.id+"' data-unite='"+s.unite+"' data-nom='"+s.nom+"' value='0' min='0' step='0.1' style='flex:1'/>"
+      +"</div>";
+  });
+  h+="<button class='btn bgreen bfull' style='margin-top:10px' onclick='finirNettoyage("+num+")'>✓ Marquer propre</button>";
+  h+="<button class='btn bor-dark bfull' style='margin-top:8px' onclick='closeModal()'>Annuler</button>";
+  openModal("Chambre "+num+" — Ménage",h);
+}
 function finirNettoyage(num){
   var emp=CURRENT_EMP?CURRENT_EMP.nom:"";
   var now=new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+  document.querySelectorAll(".fn-item").forEach(function(inp){
+    var qte=parseFloat(inp.value)||0;
+    if(qte<=0)return;
+    var sid=inp.getAttribute("data-id"),unite=inp.getAttribute("data-unite"),nom=inp.getAttribute("data-nom");
+    var s=STK[sid];
+    saveSTK(sid,{qte:Math.max(0,(s?s.qte:0)-qte)});
+    addStockMouvement({stockId:sid,stockNom:nom,type:"sortie",qte:qte,unite:unite,date:tod(),chambre:num});
+  });
   fidelieDB().collection("nettoyage").doc(String(num)).set({statut:"propre",par:emp,heureFin:now,date:tod(),updatedAt:Date.now()},{merge:true});
+  closeModal();
 }
 function resetNettoyage(num){
   fidelieDB().collection("nettoyage").doc(String(num)).set({statut:"a_nettoyer",par:"",heure:"",heureFin:"",date:tod(),updatedAt:Date.now()},{merge:true});
@@ -2188,6 +2279,7 @@ function renderCharges(){
       if(dlTxt)h+="<div class='ch-fix-dl "+st+"'>"+dlTxt+"</div>";
     }
     if(c.dernierPaiement)h+="<div style='font-size:10px;color:#6b7280;margin-top:2px'>Dernier paiement: "+fmtD(c.dernierPaiement)+(c.dernierMode?" - "+c.dernierMode:"")+"</div>";
+    if(c.note)h+="<div style='font-size:10px;color:#92400e;background:#fffbeb;border-radius:6px;padding:4px 8px;margin-top:4px'>"+c.note.replace(/\n/g,"<br>")+"</div>";
     h+="</div>";
     if(!isMaintLinked&&!isStockLinked)h+="<div class='ch-fix-badge' style='background:"+(st==="retard"?"#fee2e2;color:#991b1b":st==="bientot"?"#fef9c3;color:#92400e":st==="paye"?"#d1fae5;color:#065f46":"#e0e7ff;color:#3730a3")+"'>"+stLabel+"</div>";
     h+="</div>";
@@ -2221,6 +2313,7 @@ function confirmerChargePaye(id){
 }
 function openChargeForm(id){
   var c=id?CHARGES_DATA[id]:null;
+  var isLinked=c&&(c.linked==="stock"||c.linked==="maintenance");
   var h="<div class='fg'><label>Nom de la charge *</label><input id='cgf-nom' value='"+(c?c.nom:"")+"' placeholder='Ex: SOCODEAL — Électricité'/></div>";
   h+="<div class='fg'><label>Catégorie</label><select id='cgf-cat'>";
   ["Énergie","Telecom","Taxes","Entretien","Stock","Maintenance","Autre"].forEach(function(cat){h+="<option"+(c&&c.cat===cat?" selected":"")+">"+cat+"</option>";});
@@ -2228,26 +2321,41 @@ function openChargeForm(id){
   h+="<div class='fg'><label>Fréquence</label><select id='cgf-freq'>";
   [{v:"mensuel",l:"Mensuel"},{v:"trimestriel",l:"Trimestriel (tous les 3 mois)"},{v:"annuel",l:"Annuel"},{v:"ponctuel",l:"Ponctuel (irregulier)"}].forEach(function(o){h+="<option value='"+o.v+"'"+(c&&c.freq===o.v?" selected":"")+">"+o.l+"</option>";});
   h+="</select></div>";
-  h+="<div class='fg'><label>Montant habituel (F — 0 si variable)</label><input type='number' id='cgf-amt' value='"+(c?c.montant||0:0)+"'/></div>";
+  h+="<div class='fg'><label>Calcul du montant</label><select id='cgf-linked'>";
+  [{v:"",l:"Montant saisi manuellement"},{v:"stock",l:"Automatique — depuis les achats Stock"},{v:"maintenance",l:"Automatique — depuis le module Maintenance"}].forEach(function(o){h+="<option value='"+o.v+"'"+(c&&(c.linked||"")===o.v?" selected":"")+">"+o.l+"</option>";});
+  h+="</select></div>";
+  h+="<div class='fg' id='cgf-amt-wrap' style='"+(isLinked?"display:none":"")+"'><label>Montant habituel (F — 0 si variable)</label><input type='number' id='cgf-amt' value='"+(c?c.montant||0:0)+"'/></div>";
   h+="<div class='fg'><label>Jour d'échéance (1-31, 0 si annuel/ponctuel)</label><input type='number' id='cgf-jour' value='"+(c?c.jour||0:0)+"' min='0' max='31'/></div>";
   h+="<div class='fg'><label>Mois d'échéance (01-12, si annuel)</label><input id='cgf-mois' value='"+(c?c.mois||"":"")+"' placeholder='Ex: 03 pour mars, 12 pour décembre'/></div>";
-  h+="<button class='btn bdark bfull' onclick='saveCharge("+(id?"'"+id+"'":"null")+")'>Enregistrer</button>";
+  h+="<div class='fg'><label>Note (ex: dette, échéancier...)</label><textarea id='cgf-note' style='min-height:60px'>"+(c?c.note||"":"")+"</textarea></div>";
+  h+="<button class='btn bdark bfull' style='margin-bottom:8px' onclick='saveCharge("+(id?"'"+id+"'":"null")+")'>Enregistrer</button>";
+  if(id)h+="<button class='btn bor-red bfull' onclick=\"delCharge('"+id+"')\">Supprimer cette charge</button>";
   openModal(id?"Modifier charge":"Nouvelle charge",h);
+  var linkSel=document.getElementById("cgf-linked");
+  if(linkSel)linkSel.addEventListener("change",function(){document.getElementById("cgf-amt-wrap").style.display=this.value?"none":"";});
 }
 function saveCharge(id){
   var nom=(document.getElementById("cgf-nom")||{}).value||"";
   if(!nom.trim()){alert("Le nom est obligatoire.");return;}
+  var linked=(document.getElementById("cgf-linked")||{}).value||"";
   var data={
     nom:nom.trim(),
     cat:(document.getElementById("cgf-cat")||{}).value||"Autre",
     freq:(document.getElementById("cgf-freq")||{}).value||"mensuel",
-    montant:parseInt((document.getElementById("cgf-amt")||{}).value)||0,
+    linked:linked,
+    montant:linked?0:(parseInt((document.getElementById("cgf-amt")||{}).value)||0),
     jour:parseInt((document.getElementById("cgf-jour")||{}).value)||0,
     mois:((document.getElementById("cgf-mois")||{}).value||"").trim(),
+    note:((document.getElementById("cgf-note")||{}).value||"").trim(),
     actif:true,updatedAt:Date.now()
   };
   if(id){db.collection("charges_fixes").doc(id).set(data,{merge:true});}
   else{db.collection("charges_fixes").add(data);}
+  closeModal();
+}
+function delCharge(id){
+  if(!confirm("Supprimer definitivement cette charge ?"))return;
+  db.collection("charges_fixes").doc(id).delete();
   closeModal();
 }
 
