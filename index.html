@@ -2328,7 +2328,7 @@ function openChargeForm(id){
   h+="<div class='fg'><label>Jour d'échéance (1-31, 0 si annuel/ponctuel)</label><input type='number' id='cgf-jour' value='"+(c?c.jour||0:0)+"' min='0' max='31'/></div>";
   h+="<div class='fg'><label>Mois d'échéance (01-12, si annuel)</label><input id='cgf-mois' value='"+(c?c.mois||"":"")+"' placeholder='Ex: 03 pour mars, 12 pour décembre'/></div>";
   h+="<div class='fg'><label>Note (ex: dette, échéancier...)</label><textarea id='cgf-note' style='min-height:60px'>"+(c?c.note||"":"")+"</textarea></div>";
-  h+="<button class='btn bdark bfull' style='margin-bottom:8px' onclick='saveCharge("+(id?"'"+id+"'":"null")+")'>Enregistrer</button>";
+  h+="<button class='btn bdark bfull' style='margin-bottom:8px' onclick=\"saveCharge('"+(id||"")+"')\">Enregistrer</button>";
   if(id)h+="<button class='btn bor-red bfull' onclick=\"delCharge('"+id+"')\">Supprimer cette charge</button>";
   openModal(id?"Modifier charge":"Nouvelle charge",h);
   var linkSel=document.getElementById("cgf-linked");
@@ -2450,7 +2450,7 @@ function openEmpForm(id){
   var h="<div class='fg'><label>Nom complet *</label><input id='ef-nom' value='"+(e?e.nom:"")+"' placeholder='Prenom NOM'/></div>";
   h+="<div class='fg'><label>Role</label><select id='ef-role'>"+opt(["staff","admin"],e?e.role:"staff")+"</select></div>";
   h+="<div style='font-size:12px;color:#6b7280;margin-bottom:12px'>"+(id?"Le code existant est conserve. Utilisez Nouveau code pour le changer.":"Un code a 4 chiffres sera genere automatiquement.")+"</div>";
-  h+="<button class='btn bdark bfull' onclick='saveEmp("+(id?"'"+id+"'":"null")+")'>Enregistrer</button>";
+  h+="<button class='btn bdark bfull' onclick=\"saveEmp('"+(id||"")+"')\">Enregistrer</button>";
   openModal(id?"Modifier "+e.nom:"Nouvel employe",h);
 }
 function saveEmp(id){
