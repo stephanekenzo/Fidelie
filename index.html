@@ -590,17 +590,14 @@ var EMP_SEEDED=false,CURRENT_EMP=null,pgBuffer="";
 var STK_SEED_CHECKED=false,AMBROISE_ADMIN_CHECKED=false,CHARGES_SEEDED=false,CHARGES_MIGR_CHECKED=false;
 var editBesoinId=null;
 var CHARGES_SEED=[
-  {nom:"SOCODEAL — Electricite (Courant)",          cat:"Energie",   freq:"mensuel",     montant:0,      jour:15, mois:"",   actif:true},
-  {nom:"Camtel — Wifi",                             cat:"Telecom",   freq:"mensuel",     montant:0,      jour:10, mois:"",   actif:true, note:"Dette initiale de 40 000 F a solder, puis 16 500 F/mois une fois la dette soldee."},
-  {nom:"Swecom — Cable",                            cat:"Telecom",   freq:"mensuel",     montant:0,      jour:5,  mois:"",   actif:true, note:"Dette initiale de 15 000 F a solder, puis 15 000 F/mois."},
-  {nom:"Canal+ — Bar + Suite 117",                  cat:"Telecom",   freq:"mensuel",     montant:15000,  jour:5,  mois:"",   actif:true},
-  {nom:"Groupe electrogene — Gasoil",               cat:"Energie",   freq:"ponctuel",    montant:0,      jour:0,  mois:"",   actif:true},
-  {nom:"Jardin — Entretien",                        cat:"Entretien", freq:"mensuel",     montant:0,      jour:1,  mois:"",   actif:true},
-  {nom:"Cadastre — Taxe fonciere",                  cat:"Taxes",     freq:"annuel",      montant:0,      jour:31, mois:"03", actif:true},
-  {nom:"Patente / Impot liberatoire",               cat:"Taxes",     freq:"annuel",      montant:0,      jour:31, mois:"03", actif:true},
-  {nom:"IGS — Impot General Synthetique (cat. 8)", cat:"Taxes",     freq:"trimestriel", montant:137500, jour:31, mois:"",   actif:true, noteAnnuel:550000},
   {nom:"Fonctionnement — Stock menage",             cat:"Stock",     freq:"mensuel",     montant:0,      jour:1,  mois:"",   actif:true, linked:"stock"},
-  {nom:"Maintenance — Reparations & interventions", cat:"Maintenance",freq:"mensuel",    montant:0,      jour:1,  mois:"",   actif:true, linked:"maintenance"},
+  {nom:"Jardin — Entretien",                        cat:"Entretien", freq:"mensuel",     montant:0,      jour:1,  mois:"",   actif:true},
+  {nom:"SOCODEAL — Electricite",                    cat:"Energie",   freq:"mensuel",     montant:0,      jour:15, mois:"",   actif:true, note:"Montant a definir au debut de chaque mois."},
+  {nom:"Camtel — Wifi",                             cat:"Telecom",   freq:"mensuel",     montant:16500,  jour:10, mois:"",   actif:true, note:"Dette initiale de 40 000 F a solder, puis 16 500 F/mois une fois la dette soldee."},
+  {nom:"Swecom — Cable",                            cat:"Telecom",   freq:"mensuel",     montant:15000,  jour:5,  mois:"",   actif:true, note:"Dette initiale de 15 000 F a solder, puis 15 000 F/mois."},
+  {nom:"Canal+ — Cable TV",                         cat:"Telecom",   freq:"mensuel",     montant:15000,  jour:5,  mois:"",   actif:true},
+  {nom:"Impots DGI — Declaration IGS",              cat:"Taxes",     freq:"trimestriel", montant:137500, jour:31, mois:"",   actif:true, noteAnnuel:550000},
+  {nom:"Groupe electrogene — Gasoil",               cat:"Energie",   freq:"ponctuel",    montant:0,      jour:0,  mois:"",   actif:true},
   {nom:"Les tenues et gadgets",                     cat:"Autre",     freq:"ponctuel",    montant:0,      jour:0,  mois:"",   actif:true, note:"A programmer."}
 ];
 var BAR_OUVERT=false;
@@ -750,14 +747,12 @@ function startListeners(){
     } else if(Object.keys(CHARGES_DATA).length>0&&!CHARGES_MIGR_CHECKED){
       CHARGES_MIGR_CHECKED=true;
       db.collection("config").doc("seeds").get().then(function(doc){
-        if(doc.exists&&doc.data().chargesV2)return;
-        var byNom={};Object.values(CHARGES_DATA).forEach(function(c){byNom[c.nom]=c;});
-        var camtel=byNom["Camtel — Wifi"];
-        if(camtel&&!camtel.note)db.collection("charges_fixes").doc(camtel.id).set({note:"Dette initiale de 40 000 F a solder, puis 16 500 F/mois une fois la dette soldee."},{merge:true});
-        var swecom=byNom["Swecom — Cable"];
-        if(swecom&&!swecom.note)db.collection("charges_fixes").doc(swecom.id).set({note:"Dette initiale de 15 000 F a solder, puis 15 000 F/mois."},{merge:true});
-        if(!byNom["Les tenues et gadgets"])db.collection("charges_fixes").add({nom:"Les tenues et gadgets",cat:"Autre",freq:"ponctuel",montant:0,jour:0,mois:"",note:"A programmer.",actif:true});
-        db.collection("config").doc("seeds").set({chargesV2:true},{merge:true});
+        if(doc.exists&&doc.data().chargesV3)return;
+        var batch=db.batch();
+        Object.keys(CHARGES_DATA).forEach(function(id){batch.delete(db.collection("charges_fixes").doc(id));});
+        CHARGES_SEED.forEach(function(c){batch.set(db.collection("charges_fixes").doc(),c);});
+        batch.set(db.collection("config").doc("seeds"),{chargesV3:true},{merge:true});
+        batch.commit();
       });
     }
     renderCharges();
@@ -1407,6 +1402,7 @@ function openStkMouvement(id,type){
   var titre=type==="achat"?"Achat — "+s.nom:"Sortie — "+s.nom;
   var h="<div class='fg'><label>Quantite ("+s.unite+")</label><input type='number' id='mv-q' value='1' min='0.01' step='0.01'/></div>";
   if(type==="achat")h+="<div class='fg'><label>Prix unitaire (F)</label><input type='number' id='mv-p' value='"+(s.prixUnit||0)+"'/></div>";
+  if(type==="sortie")h+="<div class='fg'><label>Raison / destination</label><input id='mv-r' placeholder='Ex: Chambre 12, Nettoyage bar, Reception...'/></div>";
   h+="<div class='fg'><label>Date</label><input type='date' id='mv-d' value='"+tod()+"'/></div>";
   h+="<button class='btn "+(type==="achat"?"bgreen":"bdark")+" bfull' onclick=\"saveStkMouvement('"+id+"','"+type+"')\">Enregistrer</button>";
   openModal(titre,h);
@@ -1421,6 +1417,7 @@ function saveStkMouvement(id,type){
     data.prixUnit=prixUnit;data.montant=Math.round(qte*prixUnit);
     saveSTK(id,{qte:(s.qte||0)+qte,prixUnit:prixUnit||s.prixUnit||0});
   } else {
+    data.raison=(gv("mv-r")||"").trim();
     saveSTK(id,{qte:Math.max(0,(s.qte||0)-qte)});
   }
   addStockMouvement(data);
@@ -1796,6 +1793,22 @@ function buildRapport(type,debut,fin){
     if(bas.length){t+="STOCK BAS:\n";bas.forEach(function(s){t+="  *** "+s.nom+": "+s.qte+" "+s.unite+" (seuil: "+s.seuil+")\n";});t+="\n";}
     t+="INVENTAIRE:\n";stkArr.sort(function(a,b){return a.nom.localeCompare(b.nom);}).forEach(function(s){t+="  "+s.nom+": "+s.qte+" "+s.unite+"\n";});
     t+="\n";
+    var toutesSorties=Object.values(STK_MOV).filter(function(m){return m.type==="sortie"&&inP(m.date,debut,fin);}).sort(function(a,b){return(a.date||"").localeCompare(b.date||"")||(a.createdAt||0)-(b.createdAt||0);});
+    t+="MOUVEMENTS DU JOUR — SORTIES DE STOCK (periode)\n";
+    if(!toutesSorties.length){
+      t+="  Aucune sortie enregistree sur cette periode.\n\n";
+    } else {
+      var parJour={};
+      toutesSorties.forEach(function(m){parJour[m.date]=parJour[m.date]||[];parJour[m.date].push(m);});
+      Object.keys(parJour).sort().forEach(function(dt){
+        t+="  "+fmtD(dt)+"\n";
+        parJour[dt].forEach(function(m){
+          var raison=m.raison||(m.chambre?("Chambre "+m.chambre):"");
+          t+="    - "+m.stockNom+" x"+m.qte+" "+(m.unite||"")+(raison?"  ["+raison+"]":"")+"\n";
+        });
+      });
+      t+="\n";
+    }
     var sortiesChArr=Object.values(STK_MOV).filter(function(m){return m.type==="sortie"&&m.chambre&&inP(m.date,debut,fin);});
     var chNettoyees=Object.keys(NETTOYAGE).filter(function(n){return NETTOYAGE[n].date&&inP(NETTOYAGE[n].date,debut,fin)&&NETTOYAGE[n].statut==="propre";});
     var chOccupees=Object.values(REZ).filter(function(r){return r.statut==="check-in"&&(inP(r.checkIn,debut,fin)||inP(r.checkOut,debut,fin));}).map(function(r){return r.chambre;});
@@ -2013,7 +2026,7 @@ function finirNettoyage(num){
     var sid=inp.getAttribute("data-id"),unite=inp.getAttribute("data-unite"),nom=inp.getAttribute("data-nom");
     var s=STK[sid];
     saveSTK(sid,{qte:Math.max(0,(s?s.qte:0)-qte)});
-    addStockMouvement({stockId:sid,stockNom:nom,type:"sortie",qte:qte,unite:unite,date:tod(),chambre:num});
+    addStockMouvement({stockId:sid,stockNom:nom,type:"sortie",qte:qte,unite:unite,date:tod(),chambre:num,raison:"Menage chambre "+num});
   });
   fidelieDB().collection("nettoyage").doc(String(num)).set({statut:"propre",par:emp,heureFin:now,date:tod(),updatedAt:Date.now()},{merge:true});
   closeModal();
