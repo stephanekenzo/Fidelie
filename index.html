@@ -296,7 +296,7 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
   <div id="empbadge"></div>
 </div>
 <div id="tabs">
-  <button class="tab-btn active" onclick="goTab('chambres')" id="tb-chambres">🛏️<br>Chambres</button>
+  <button class="tab-btn active" onclick="goTab('chambres')" id="tb-chambres">🛏️<br>Chambres<span class="tbadge hide" id="bdgimpayes">0</span></button>
   <button class="tab-btn" onclick="goTab('reservations')" id="tb-reservations">&#128203;<br>Reserv.<span class="tbadge hide" id="bdgrez">0</span></button>
   <button class="tab-btn hide" onclick="goTab('bar')" id="tb-bar" title="Bar ferme actuellement">🍽️<br>Bar</button>
   <button class="tab-btn" onclick="goTab('caisse')" id="tb-caisse">💰<br>Caisse</button>
@@ -322,6 +322,7 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
     <button class="fb active" onclick="setCF('tous',this)">Toutes</button>
     <button class="fb" onclick="setCF('libre',this)">Libre</button>
     <button class="fb" onclick="setCF('occupee',this)">Occupee</button>
+    <button class="fb" onclick="setCF('impayes',this)">💰 Impayes/Avances</button>
     <button class="fb" onclick="setCF('maintenance',this)">Maintenance</button>
   </div>
   <div class="ch-grid" id="chgrid"><div class="loading">Connexion Firebase...</div></div>
@@ -465,12 +466,12 @@ input,select,button,textarea{font-family:inherit;font-size:14px}
   </div>
   <div class="rapport-grid">
     <div class="rapport-card" onclick="genererRapport('synthese')"><div class="rapport-icon">&#128202;</div><div class="rapport-title">Synthese</div><div class="rapport-desc">Recettes, depenses, solde</div></div>
-    <div class="rapport-card" onclick="genererRapport('caisse')"><div class="rapport-icon">&#128176;</div><div class="rapport-title">Caisse</div><div class="rapport-desc">Toutes les recettes</div></div>
+    <div class="rapport-card" id="rc-caisse" onclick="genererRapport('caisse')"><div class="rapport-icon">&#128176;</div><div class="rapport-title">Caisse</div><div class="rapport-desc">Toutes les recettes</div></div>
     <div class="rapport-card" onclick="genererRapport('reservations')"><div class="rapport-icon">&#128203;</div><div class="rapport-title">Reservations</div><div class="rapport-desc">Sejours et check-ins</div></div>
     <div class="rapport-card" onclick="genererRapport('chambres')"><div class="rapport-icon">🛏️</div><div class="rapport-title">Chambres</div><div class="rapport-desc">Etat et occupation</div></div>
     <div class="rapport-card" id="rc-depenses" onclick="genererRapport('depenses')"><div class="rapport-icon">💸</div><div class="rapport-title">Depenses</div><div class="rapport-desc">Toutes les sorties</div></div>
     <div class="rapport-card" onclick="genererRapport('clients')"><div class="rapport-icon">👥</div><div class="rapport-title">Clients</div><div class="rapport-desc">Liste et historique</div></div>
-    <div class="rapport-card" onclick="genererRapport('maintenance')"><div class="rapport-icon">🔧</div><div class="rapport-title">Maintenance</div><div class="rapport-desc">Tickets et couts</div></div>
+    <div class="rapport-card" id="rc-maintenance" onclick="genererRapport('maintenance')"><div class="rapport-icon">🔧</div><div class="rapport-title">Maintenance</div><div class="rapport-desc">Tickets et couts</div></div>
     <div class="rapport-card" onclick="genererRapport('stock')"><div class="rapport-icon">📦</div><div class="rapport-title">Stock</div><div class="rapport-desc">Inventaire et alertes</div></div>
     <div class="rapport-card" onclick="genererRapport('achats')"><div class="rapport-icon">🛒</div><div class="rapport-title">Achats</div><div class="rapport-desc">Achats Stock et Besoins</div></div>
     <div class="rapport-card" onclick="genererRapport('menage')"><div class="rapport-icon">🧹</div><div class="rapport-title">Ménage</div><div class="rapport-desc">Statut des chambres</div></div>
@@ -874,7 +875,7 @@ function upHdr(){
   document.getElementById("mopen").textContent=mo;
   document.getElementById("mclosed").textContent=Object.values(MAINT).filter(function(m){return m.statut==="resolu";}).length;
 }
-var TABS_RESTREINTS=["depenses","salaires","charges","personnel"];
+var TABS_RESTREINTS=["depenses","salaires","charges","personnel","caisse","maintenance"];
 function goTab(id){
   if(TABS_RESTREINTS.indexOf(id)>=0&&(!CURRENT_EMP||CURRENT_EMP.role!=="admin")){alert("Accès réservé à la direction.");return;}
   document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
@@ -890,7 +891,10 @@ function goTab(id){
 // CHAMBRES
 function setCF(f,b){cF=f;document.querySelectorAll("#chfiltres .fb").forEach(function(x){x.classList.remove("active");});b.classList.add("active");renderCH();}
 function renderCH(){
-  var filtre=cF==="tous"?CH_NUMS:CH_NUMS.filter(function(n){return getSt(n)===cF;});
+  var nbImpayes=CH_NUMS.filter(function(n){return getSt(n)==="occupee"&&(parseInt((CHAMBRES[n]||{}).resteAPayer)||0)>0;}).length;
+  var bdgEl=document.getElementById("bdgimpayes");
+  if(bdgEl){bdgEl.textContent=nbImpayes;bdgEl.classList.toggle("hide",!nbImpayes);}
+  var filtre=cF==="tous"?CH_NUMS:cF==="impayes"?CH_NUMS.filter(function(n){return getSt(n)==="occupee"&&(parseInt((CHAMBRES[n]||{}).resteAPayer)||0)>0;}):CH_NUMS.filter(function(n){return getSt(n)===cF;});
   document.getElementById("chgrid").innerHTML=filtre.map(function(num){
     var st=getSt(num);
     var ra=null;Object.values(REZ).forEach(function(r){if(r.chambre===num&&r.statut==="check-in")ra=r;});
@@ -898,6 +902,8 @@ function renderCH(){
     var cNom=ra?ra.client:(chData.client||"");
     var cTel=ra?ra.tel:(chData.tel||"");
     var cDep=ra?ra.checkOut:(chData.checkOut||"");
+    var reste=parseInt(chData.resteAPayer)||0;
+    var paye=parseInt(chData.montantPaye)||0;
     var h="<div class='ch-card "+(st==="occupee"?"occ2":st==="maintenance"?"maint":"")+"'>";
     h+="<div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px'><span style='font-size:18px;font-weight:800'>"+num+"</span>"+bdg(st)+"</div>";
     h+="<div style='font-size:11px;color:#6b7280'>"+getTP(num)+"</div>";
@@ -909,11 +915,15 @@ function renderCH(){
     if(st==="occupee"&&cNom){
       h+="<div style='font-size:11px;font-weight:600;margin-bottom:2px'>"+cNom+"</div>";
       if(cTel)h+="<div style='font-size:10px;color:#6b7280;margin-bottom:2px'>"+cTel+"</div>";
-      if(cDep)h+="<div style='font-size:10px;color:#6b7280;margin-bottom:6px'>Depart: "+fmtD(cDep)+"</div>";
+      h+="<div style='font-size:10px;color:#6b7280;margin-bottom:6px'>Depart: "+(chData.sortieIndeterminee?"<span style='color:#d97706;font-weight:700'>a confirmer</span>":(cDep?fmtD(cDep):"--"))+"</div>";
+      if(reste>0){
+        h+="<div style='font-size:10px;font-weight:700;color:#be123c;background:#fee2e2;padding:3px 8px;border-radius:6px;margin-bottom:6px'>"+(paye>0?"Avance "+fmt(paye)+" — Reste "+fmt(reste):"Non paye — "+fmt(reste)+" du")+"</div>";
+      }
     }
     h+="<div class='brow'>";
     if(st==="libre")h+="<button class='btn bgreen bsm' onclick='openCI("+num+",null)'>Check-in</button>";
     if(st==="occupee")h+="<button class='btn bred bsm' onclick='doCO("+num+")'>Check-out</button>";
+    if(st==="occupee"&&reste>0)h+="<button class='btn bgreen bsm' onclick='openEncaisser("+num+")'>💰 Encaisser</button>";
     if(st==="occupee")h+="<button class='btn bgold bsm' onclick='genererFactureChambre("+num+")'>📄 Facture</button>";
     h+="<button class='btn bor-yel bsm' onclick='togMaint("+num+")'>Maint.</button>";
     h+="</div></div>";
@@ -921,34 +931,86 @@ function renderCH(){
   }).join("");
 }
 function openCI(num,cd){
+  var libres=CH_NUMS.filter(function(n){return getSt(n)==="libre"||n===num;});
   var pd=getPD(num);
   var h="<div class='fsep'>Informations client</div>";
   h+="<div class='fg'><label>Nom complet *</label><input id='fci-cl' value='"+(cd?cd.nom||"":"")+"' placeholder='Prenom NOM'/></div>";
   h+="<div class='frow'><div class='fg'><label>Telephone</label><input id='fci-tel' value='"+(cd?cd.tel||"":"")+"' placeholder='+237...' type='tel'/></div><div class='fg'><label>Ville</label><input id='fci-ville' value='"+(cd?cd.ville||"":"")+"' placeholder='Yaounde'/></div></div>";
   h+="<div class='fg'><label>Piece identite</label><input id='fci-piece' value='"+(cd?cd.piece||"":"")+"' placeholder='CNI 123456'/></div>";
   h+="<div class='fsep'>Sejour</div>";
-  h+="<div class='frow'><div class='fg'><label>Arrivee *</label><input type='date' id='fci-in' value='"+tod()+"' onchange='upRecapCI("+num+")'/></div><div class='fg'><label>Depart *</label><input type='date' id='fci-out' value='"+addD(tod(),1)+"' onchange='upRecapCI("+num+")'/></div></div>";
-  h+="<div class='fg'><label>Prix negocie par nuit (F)</label><input class='prix-input' type='number' id='fci-prix' value='"+pd+"' oninput='upRecapCI("+num+")'/><div style='font-size:11px;color:#6b7280;margin-top:4px'>Prix standard: "+fmt(pd)+"</div></div>";
+  h+="<div class='fg'><label>Chambre *</label><select id='fci-ch' onchange='onFciChChange()'>"+libres.map(function(n){return"<option value='"+n+"'"+(n===num?" selected":"")+">Ch."+n+" - "+getTP(n)+" ("+fmt(getPD(n))+"/nuit)</option>";}).join("")+"</select></div>";
+  h+="<div class='frow'><div class='fg'><label>Arrivee *</label><input type='date' id='fci-in' value='"+tod()+"' onchange='upRecapCI()'/></div><div class='fg'><label>Depart *</label><input type='date' id='fci-out' value='"+addD(tod(),1)+"' onchange='upRecapCI()'/></div></div>";
+  h+="<div class='fg' style='display:flex;align-items:center;gap:8px'><input type='checkbox' id='fci-indet' onchange='onFciIndetChange()' style='width:auto'/><label style='margin:0;text-transform:none;font-weight:600'>Date de depart inconnue (le client ne sait pas encore)</label></div>";
+  h+="<div class='fg'><label>Prix negocie par nuit (F)</label><input class='prix-input' type='number' id='fci-prix' value='"+pd+"' oninput='upRecapCI()'/><div style='font-size:11px;color:#6b7280;margin-top:4px'>Prix standard: "+fmt(pd)+"</div></div>";
+  h+="<div class='fg'><label>Montant encaisse maintenant (F)</label><input type='number' id='fci-ac' value='"+pd+"' oninput='upRecapCI()'/><div style='font-size:11px;color:#6b7280;margin-top:4px'>Laisse a 0 si le client n'a encore rien paye. Peut etre inferieur au total (avance).</div></div>";
   h+="<div class='fg'><label>Enregistre par</label><select id='fci-emp'>"+opt(EMP)+"</select></div>";
-  h+="<div id='rci'></div><button class='btn bgreen bfull' onclick='doCI("+num+")'>Confirmer le check-in</button>";
-  openModal("Check-in Ch."+num,h);upRecapCI(num);
+  h+="<div id='rci'></div><button class='btn bgreen bfull' onclick='doCI()'>Confirmer le check-in</button>";
+  openModal("Check-in",h);upRecapCI();
 }
-function upRecapCI(num){
+function onFciChChange(){
+  var num=parseInt(gv("fci-ch"));
+  var pd=getPD(num);
+  var prixInput=document.getElementById("fci-prix");if(prixInput)prixInput.value=pd;
+  var acInput=document.getElementById("fci-ac");if(acInput)acInput.value=pd;
+  upRecapCI();
+}
+function onFciIndetChange(){
+  var indet=document.getElementById("fci-indet").checked;
+  var outInput=document.getElementById("fci-out");
+  if(outInput)outInput.disabled=indet;
+  upRecapCI();
+}
+function upRecapCI(){
+  var num=parseInt(gv("fci-ch"))||0;
   var ci=gv("fci-in"),co=gv("fci-out"),prix=gi("fci-prix")||getPD(num);
+  var indet=document.getElementById("fci-indet")&&document.getElementById("fci-indet").checked;
+  var el=document.getElementById("rci");if(!el)return;
+  if(indet){
+    el.innerHTML="<div class='recap' style='margin-bottom:12px'><div class='rr'><span>Duree inconnue - "+fmt(prix)+"/nuit</span><strong style='color:#d97706;font-size:13px'>A regler au depart</strong></div></div>";
+    return;
+  }
   if(!ci||!co)return;
   var n=Math.max(1,diff(ci,co));
-  var el=document.getElementById("rci");
-  if(el)el.innerHTML="<div class='recap' style='margin-bottom:12px'><div class='rr'><span>"+n+" nuit"+(n>1?"s":"")+" x "+fmt(prix)+"</span><strong style='color:#059669;font-size:15px'>"+fmt(prix*n)+"</strong></div></div>";
+  el.innerHTML="<div class='recap' style='margin-bottom:12px'><div class='rr'><span>"+n+" nuit"+(n>1?"s":"")+" x "+fmt(prix)+"</span><strong style='color:#059669;font-size:15px'>"+fmt(prix*n)+"</strong></div></div>";
 }
-function doCI(num){
+function doCI(){
+  var num=parseInt(gv("fci-ch"));
   var cl=gv("fci-cl").trim(),ci=gv("fci-in"),co=gv("fci-out");
+  var indet=document.getElementById("fci-indet")&&document.getElementById("fci-indet").checked;
   var emp=gv("fci-emp")||EMP[0],prix=gi("fci-prix")||getPD(num);
   var tel=gv("fci-tel"),ville=gv("fci-ville"),piece=gv("fci-piece");
-  if(!cl||!ci||!co){alert("Nom, arrivee et depart obligatoires.");return;}
-  var n=Math.max(1,diff(ci,co)),montant=prix*n;
-  addTX({type:"Chambre",desc:"Ch."+num+" - "+cl+" ("+n+" nuit"+(n>1?"s":"")+")",montant:montant,employe:emp,date:tod(),prixNuit:prix,chambre:num});
-  saveCH(num,{statut:"occupee",client:cl,tel:tel,ville:ville,piece:piece,checkIn:ci,checkOut:co,prixNuit:prix});
+  if(!num){alert("Choisis une chambre.");return;}
+  if(!cl||!ci||(!co&&!indet)){alert("Nom, arrivee et depart obligatoires (ou coche 'date inconnue').");return;}
+  if(indet)co=addD(ci,1);
+  var n=Math.max(1,diff(ci,co)),montant=indet?0:prix*n;
+  var encaisse=Math.max(0,gi("fci-ac")||0);
+  if(!indet&&encaisse>montant)encaisse=montant;
+  var reste=indet?0:Math.max(0,montant-encaisse);
+  if(encaisse>0)addTX({type:"Chambre",desc:"Ch."+num+" - "+cl+(indet?" (duree inconnue)":" ("+n+" nuit"+(n>1?"s":"")+")")+(reste>0?" - avance":""),montant:encaisse,employe:emp,date:tod(),prixNuit:prix,chambre:num});
+  saveCH(num,{statut:"occupee",client:cl,tel:tel,ville:ville,piece:piece,checkIn:ci,checkOut:co,prixNuit:prix,montantTotal:montant,montantPaye:encaisse,resteAPayer:reste,sortieIndeterminee:indet});
   upsertClient(cl,tel,ville,piece,montant);
+  closeModal();
+}
+function openEncaisser(num){
+  var ch=CHAMBRES[num]||{};
+  var reste=parseInt(ch.resteAPayer)||0;
+  var h="<div style='margin-bottom:12px;font-size:13px;color:#6b7280'>"+(ch.client||"")+" - Ch."+num+"<br>Deja paye: "+fmt(parseInt(ch.montantPaye)||0)+" | Reste du: <strong style='color:#be123c'>"+fmt(reste)+"</strong></div>";
+  h+="<div class='fg'><label>Montant encaisse (F)</label><input type='number' id='enc-mt' value='"+reste+"' max='"+reste+"'/></div>";
+  h+="<div class='fg'><label>Enregistre par</label><select id='enc-emp'>"+opt(EMP)+"</select></div>";
+  h+="<button class='btn bgreen bfull' onclick='doEncaisser("+num+")'>Encaisser</button>";
+  openModal("Encaisser - Ch."+num,h);
+}
+function doEncaisser(num){
+  var ch=CHAMBRES[num]||{};
+  var reste=parseInt(ch.resteAPayer)||0;
+  var mt=Math.max(0,gi("enc-mt")||0);
+  if(mt<=0){alert("Montant invalide.");return;}
+  if(mt>reste)mt=reste;
+  var emp=gv("enc-emp")||EMP[0];
+  addTX({type:"Chambre",desc:"Encaissement Ch."+num+" - "+(ch.client||""),montant:mt,employe:emp,date:tod(),chambre:num});
+  saveCH(num,{montantPaye:(parseInt(ch.montantPaye)||0)+mt,resteAPayer:reste-mt});
+  var ra=null;Object.values(REZ).forEach(function(r){if(r.chambre===num&&r.statut==="check-in")ra=r;});
+  if(ra)saveREZ(ra.id,{acompte:(parseInt(ra.acompte)||0)+mt});
   closeModal();
 }
 function doCO(num){
@@ -956,8 +1018,11 @@ function doCO(num){
   var ch=CHAMBRES[num]||{};
   var client=ra?ra.client:(ch.client||"Ch."+num);
   var tel=ra?ra.tel:(ch.tel||"");
-  if(!confirm("Check-out chambre "+num+" - "+client+" ?"))return;
-  saveCH(num,{statut:"libre",client:"",tel:"",ville:"",piece:"",checkIn:"",checkOut:"",prixNuit:""});
+  var reste=parseInt(ch.resteAPayer)||0;
+  var msg="Check-out chambre "+num+" - "+client+" ?";
+  if(reste>0)msg="⚠️ Il reste "+fmt(reste)+" F impaye pour cette chambre.\n"+msg;
+  if(!confirm(msg))return;
+  saveCH(num,{statut:"libre",client:"",tel:"",ville:"",piece:"",checkIn:"",checkOut:"",prixNuit:"",montantTotal:"",montantPaye:"",resteAPayer:"",sortieIndeterminee:false});
   if(ra)updREZSt(ra.id,"check-out");
   // Auto : chambre à nettoyer après check-out
   fidelieDB().collection("nettoyage").doc(String(num)).set({statut:"a_nettoyer",par:"",heure:"",heureFin:"",date:tod(),notes:"",updatedAt:Date.now()},{merge:true});
@@ -1103,9 +1168,8 @@ function openRezDetail(id){
 function doRCI(id){
   var r=REZ[id];
   updREZSt(id,"check-in");
-  saveCH(r.chambre,{statut:"occupee",client:r.client,tel:r.tel||"",ville:r.ville||"",piece:r.piece||"",checkIn:r.checkIn,checkOut:r.checkOut,prixNuit:r.prixNuit||getPD(r.chambre)});
-  var reste=(r.montantTotal||0)-(parseInt(r.acompte)||0);
-  if(reste>0)addTX({type:"Chambre",desc:"Ch."+r.chambre+" - "+r.client+" ("+(r.nuits||1)+" nuit"+((r.nuits||1)>1?"s":"")+")",montant:reste,employe:r.employe||EMP[0],date:tod(),prixNuit:r.prixNuit,chambre:r.chambre});
+  var tot=r.montantTotal||0,paye=parseInt(r.acompte)||0,reste=Math.max(0,tot-paye);
+  saveCH(r.chambre,{statut:"occupee",client:r.client,tel:r.tel||"",ville:r.ville||"",piece:r.piece||"",checkIn:r.checkIn,checkOut:r.checkOut,prixNuit:r.prixNuit||getPD(r.chambre),montantTotal:tot,montantPaye:paye,resteAPayer:reste});
   upsertClient(r.client,r.tel,r.ville,r.piece,r.montantTotal);
   closeModal();
 }
@@ -1563,7 +1627,8 @@ function genererFactureChambre(num){
     client:ch.client,tel:ch.tel||"",piece:ch.piece||"",
     chambre:parseInt(num),checkIn:ch.checkIn||tod(),checkOut:ch.checkOut||tod(),
     prixNuit:ch.prixNuit||getPD(num),
-    nuits:Math.max(1,diff(ch.checkIn||tod(),ch.checkOut||tod()))
+    nuits:Math.max(1,diff(ch.checkIn||tod(),ch.checkOut||tod())),
+    acompte:parseInt(ch.montantPaye)||0
   };
   getNextFacNum(function(n){_buildFacture(data,n);});
 }
@@ -1779,6 +1844,13 @@ function buildRapport(type,debut,fin){
     var tD=depArr.reduce(function(s,x){return s+x.montant;},0);
     var occ=CH_NUMS.filter(function(n){return getSt(n)==="occupee";}).length;
     t+="OCCUPATION\n  Occupees: "+occ+"/27 | Libres: "+(27-occ)+"\n\n";
+    var chImpayees=CH_NUMS.filter(function(n){return getSt(n)==="occupee"&&(parseInt((CHAMBRES[n]||{}).resteAPayer)||0)>0;});
+    if(chImpayees.length){
+      var totReste=chImpayees.reduce(function(s,n){return s+(parseInt((CHAMBRES[n]||{}).resteAPayer)||0);},0);
+      t+="⚠ IMPAYES / AVANCES EN COURS ("+chImpayees.length+" chambre"+(chImpayees.length>1?"s":"")+" - "+fmt(totReste)+" F du)\n";
+      chImpayees.forEach(function(n){var c=CHAMBRES[n];t+="  Ch."+n+" - "+(c.client||"")+" - Paye: "+fmt(parseInt(c.montantPaye)||0)+" - Reste: "+fmt(parseInt(c.resteAPayer)||0)+"\n";});
+      t+="\n";
+    }
     var tMaint=Object.values(MAINT).filter(function(m){return m.date&&inP(m.date,debut,fin);}).reduce(function(s,m){return s+(parseInt(m.cout)||0);},0);
     var besArrP=Object.values(BESOINS).filter(function(b){return b.statut==="achete"&&b.categorie!=="stock"&&inP(b.dateAchat||b.date,debut,fin);});
     var tBes=besArrP.reduce(function(s,b){return s+(parseInt(b.prixEstime)||0);},0);
@@ -2455,8 +2527,8 @@ function grantAccess(emp,id){
   pgBuffer="";updateDots();
   updateEmpBadge();
   var isAdmin=CURRENT_EMP.role==="admin";
-  ["tb-personnel","tb-salaires","tb-charges","tb-depenses"].forEach(function(id2){var el=document.getElementById(id2);if(el)el.classList.toggle("hide",!isAdmin);});
-  ["rc-depenses","rc-salaires","rc-charges","rc-personnel"].forEach(function(id2){var el=document.getElementById(id2);if(el)el.classList.toggle("hide",!isAdmin);});
+  ["tb-personnel","tb-salaires","tb-charges","tb-depenses","tb-caisse","tb-maintenance"].forEach(function(id2){var el=document.getElementById(id2);if(el)el.classList.toggle("hide",!isAdmin);});
+  ["rc-depenses","rc-salaires","rc-charges","rc-personnel","rc-caisse","rc-maintenance"].forEach(function(id2){var el=document.getElementById(id2);if(el)el.classList.toggle("hide",!isAdmin);});
   applyBarState();
   updateChargesBadge();
 }
