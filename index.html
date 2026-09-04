@@ -628,7 +628,7 @@ var STK_DEF=[
 ];
 var CHAMBRES={},REZ={},TX={},DEP={},MAINT={},STK={},CLIENTS={},EMPLOYES={},CHARGES_DATA={},BESOINS={},STK_MOV={};
 var EMP_SEEDED=false,CURRENT_EMP=null,pgBuffer="";
-var STK_SEED_CHECKED=false,AMBROISE_ADMIN_CHECKED=false,CHARGES_SEEDED=false,CHARGES_MIGR_CHECKED=false;
+var STK_SEED_CHECKED=false,AMBROISE_ADMIN_CHECKED=false,CHARGES_SEEDED=false,CHARGES_MIGR_CHECKED=false,CH_INIT_CHECKED=false;
 var editBesoinId=null;
 var CHARGES_SEED=[
   {nom:"Fonctionnement — Stock menage",             cat:"Stock",     freq:"mensuel",     montant:0,      jour:1,  mois:"",   actif:true, linked:"stock"},
@@ -703,6 +703,16 @@ function fmtDL(d){if(!d)return"--";return new Date(d+"T12:00:00").toLocaleDateSt
 function diff(a,b){return Math.ceil((new Date(b)-new Date(a))/86400000);}
 function addD(d,n){var r=new Date(d+"T12:00:00");r.setDate(r.getDate()+n);return r.toISOString().split("T")[0];}
 function opt(a,s){s=s||"";return a.map(function(e){return "<option value='"+e+"'"+(e===s?" selected":"")+">"+e+"</option>";}).join("");}
+function empNames(){
+  var names=Object.values(EMPLOYES).map(function(e){return e.nom;}).filter(Boolean);
+  return names.length?names:EMP;
+}
+function optEmp(selected){
+  var names=empNames();
+  var sel=selected||(CURRENT_EMP&&CURRENT_EMP.nom)||names[0]||"";
+  if(names.indexOf(sel)<0)names=[sel].concat(names);
+  return opt(names,sel);
+}
 function gv(id){var el=document.getElementById(id);return el?el.value:"";}
 function gi(id){return parseInt(gv(id))||0;}
 function getSt(num){
@@ -727,7 +737,18 @@ window.addEventListener("offline",function(){setSB("off");});
 function startListeners(){
   db.collection("chambres").onSnapshot(function(snap){
     snap.forEach(function(d){CHAMBRES[d.id]=Object.assign({},d.data(),{id:d.id});});
-    CH_NUMS.forEach(function(n){if(!CHAMBRES[n])db.collection("chambres").doc(String(n)).set({num:n,statut:"libre"});});
+    if(!CH_INIT_CHECKED){
+      CH_INIT_CHECKED=true;
+      // Verification ponctuelle (lecture unique, pas a chaque snapshot) pour creer
+      // uniquement les chambres reellement absentes de la base - ne touche JAMAIS
+      // au statut d'une chambre existante (evite d'ecraser des chambres occupees).
+      db.collection("chambres").get().then(function(realSnap){
+        var existants={};realSnap.forEach(function(d){existants[d.id]=true;});
+        CH_NUMS.forEach(function(n){
+          if(!existants[String(n)])db.collection("chambres").doc(String(n)).set({num:n,statut:"libre"});
+        });
+      });
+    }
     renderCH();upHdr();setSB("ok");
   },function(){setSB("err");});
   db.collection("reservations").orderBy("createdAt","desc").onSnapshot(function(snap){
@@ -943,7 +964,7 @@ function openCI(num,cd){
   h+="<div class='fg' style='display:flex;align-items:center;gap:8px'><input type='checkbox' id='fci-indet' onchange='onFciIndetChange()' style='width:auto'/><label style='margin:0;text-transform:none;font-weight:600'>Date de depart inconnue (le client ne sait pas encore)</label></div>";
   h+="<div class='fg'><label>Prix negocie par nuit (F)</label><input class='prix-input' type='number' id='fci-prix' value='"+pd+"' oninput='upRecapCI()'/><div style='font-size:11px;color:#6b7280;margin-top:4px'>Prix standard: "+fmt(pd)+"</div></div>";
   h+="<div class='fg'><label>Montant encaisse maintenant (F)</label><input type='number' id='fci-ac' value='"+pd+"' oninput='upRecapCI()'/><div style='font-size:11px;color:#6b7280;margin-top:4px'>Laisse a 0 si le client n'a encore rien paye. Peut etre inferieur au total (avance).</div></div>";
-  h+="<div class='fg'><label>Enregistre par</label><select id='fci-emp'>"+opt(EMP)+"</select></div>";
+  h+="<div class='fg'><label>Enregistre par</label><select id='fci-emp'>"+optEmp()+"</select></div>";
   h+="<div id='rci'></div><button class='btn bgreen bfull' onclick='doCI()'>Confirmer le check-in</button>";
   openModal("Check-in",h);upRecapCI();
 }
@@ -977,7 +998,7 @@ function doCI(){
   var num=parseInt(gv("fci-ch"));
   var cl=gv("fci-cl").trim(),ci=gv("fci-in"),co=gv("fci-out");
   var indet=document.getElementById("fci-indet")&&document.getElementById("fci-indet").checked;
-  var emp=gv("fci-emp")||EMP[0],prix=gi("fci-prix")||getPD(num);
+  var emp=gv("fci-emp")||(CURRENT_EMP&&CURRENT_EMP.nom)||EMP[0],prix=gi("fci-prix")||getPD(num);
   var tel=gv("fci-tel"),ville=gv("fci-ville"),piece=gv("fci-piece");
   if(!num){alert("Choisis une chambre.");return;}
   if(!cl||!ci||(!co&&!indet)){alert("Nom, arrivee et depart obligatoires (ou coche 'date inconnue').");return;}
@@ -996,7 +1017,7 @@ function openEncaisser(num){
   var reste=parseInt(ch.resteAPayer)||0;
   var h="<div style='margin-bottom:12px;font-size:13px;color:#6b7280'>"+(ch.client||"")+" - Ch."+num+"<br>Deja paye: "+fmt(parseInt(ch.montantPaye)||0)+" | Reste du: <strong style='color:#be123c'>"+fmt(reste)+"</strong></div>";
   h+="<div class='fg'><label>Montant encaisse (F)</label><input type='number' id='enc-mt' value='"+reste+"' max='"+reste+"'/></div>";
-  h+="<div class='fg'><label>Enregistre par</label><select id='enc-emp'>"+opt(EMP)+"</select></div>";
+  h+="<div class='fg'><label>Enregistre par</label><select id='enc-emp'>"+optEmp()+"</select></div>";
   h+="<button class='btn bgreen bfull' onclick='doEncaisser("+num+")'>Encaisser</button>";
   openModal("Encaisser - Ch."+num,h);
 }
@@ -1006,7 +1027,7 @@ function doEncaisser(num){
   var mt=Math.max(0,gi("enc-mt")||0);
   if(mt<=0){alert("Montant invalide.");return;}
   if(mt>reste)mt=reste;
-  var emp=gv("enc-emp")||EMP[0];
+  var emp=gv("enc-emp")||(CURRENT_EMP&&CURRENT_EMP.nom)||EMP[0];
   addTX({type:"Chambre",desc:"Encaissement Ch."+num+" - "+(ch.client||""),montant:mt,employe:emp,date:tod(),chambre:num});
   saveCH(num,{montantPaye:(parseInt(ch.montantPaye)||0)+mt,resteAPayer:reste-mt});
   var ra=null;Object.values(REZ).forEach(function(r){if(r.chambre===num&&r.statut==="check-in")ra=r;});
@@ -1102,7 +1123,7 @@ function openRezForm(id,cd){
   h+="<div class='frow'><div class='fg'><label>Arrivee *</label><input type='date' id='rf-in' value='"+(r?r.checkIn:tod())+"' onchange='refChSel()'/></div><div class='fg'><label>Depart *</label><input type='date' id='rf-out' value='"+(r?r.checkOut:addD(tod(),1))+"' onchange='refChSel()'/></div></div>";
   h+="<div class='fg'><label>Chambre * <span id='chdlbl' style='font-weight:400;text-transform:none;font-size:11px'></span></label><input type='hidden' id='rf-ch' value='"+(r?r.chambre||"":"")+"'/><div class='chsg' id='chsg'></div></div>";
   h+="<div class='fg'><label>Prix negocie/nuit (F)</label><input class='prix-input' type='number' id='rf-prix' value='"+(r?r.prixNuit||"":"")+"' placeholder='Prix selon chambre' oninput='upRezRecap()'/></div>";
-  h+="<div class='frow'><div class='fg'><label>Source</label><select id='rf-src'>"+opt(SRC,r?r.source:SRC[0])+"</select></div><div class='fg'><label>Statut</label><select id='rf-st'>"+opt(["confirmee","en attente","annulee"],r?r.statut:"confirmee")+"</select></div><div class='fg'><label>Par</label><select id='rf-emp'>"+opt(EMP,r?r.employe:EMP[0])+"</select></div><div class='fg'><label>Acompte (F)</label><input type='number' id='rf-ac' value='"+(r?r.acompte||"":"")+"' placeholder='0' oninput='upRezRecap()'/></div></div>";
+  h+="<div class='frow'><div class='fg'><label>Source</label><select id='rf-src'>"+opt(SRC,r?r.source:SRC[0])+"</select></div><div class='fg'><label>Statut</label><select id='rf-st'>"+opt(["confirmee","en attente","annulee"],r?r.statut:"confirmee")+"</select></div><div class='fg'><label>Par</label><select id='rf-emp'>"+optEmp(r?r.employe:null)+"</select></div><div class='fg'><label>Acompte (F)</label><input type='number' id='rf-ac' value='"+(r?r.acompte||"":"")+"' placeholder='0' oninput='upRezRecap()'/></div></div>";
   h+="<div class='fg'><label>Notes</label><input id='rf-notes' value='"+(r?r.notes||"":"")+"' placeholder='Demandes speciales...'/></div>";
   h+="<div id='rezrecap'></div>";
   h+="<button class='btn bgreen bfull' style='margin-bottom:8px' onclick='saveRez()'>"+(id?"Mettre a jour":"Confirmer")+"</button>";
@@ -1140,7 +1161,7 @@ function saveRez(){
   if(new Date(co)<=new Date(ci)){alert("Date de depart doit etre apres arrivee.");return;}
   var nuits=Math.max(1,diff(ci,co)),prixNuit=gi("rf-prix")||getPD(ch),montantTotal=prixNuit*nuits,ac=gv("rf-ac");
   var tel=gv("rf-tel"),ville=gv("rf-ville"),piece=gv("rf-piece");
-  var data={client:cl,chambre:ch,checkIn:ci,checkOut:co,nuits:nuits,prixNuit:prixNuit,montantTotal:montantTotal,tel:tel,ville:ville,piece:piece,source:gv("rf-src")||SRC[0],statut:gv("rf-st")||"confirmee",employe:gv("rf-emp")||EMP[0],notes:gv("rf-notes"),acompte:ac};
+  var data={client:cl,chambre:ch,checkIn:ci,checkOut:co,nuits:nuits,prixNuit:prixNuit,montantTotal:montantTotal,tel:tel,ville:ville,piece:piece,source:gv("rf-src")||SRC[0],statut:gv("rf-st")||"confirmee",employe:gv("rf-emp")||(CURRENT_EMP&&CURRENT_EMP.nom)||EMP[0],notes:gv("rf-notes"),acompte:ac};
   saveREZ(editRezId,data);
   upsertClient(cl,tel,ville,piece,montantTotal);
   if(!editRezId&&parseInt(ac)>0)addTX({type:"Chambre",desc:"Acompte Ch."+ch+" "+cl,montant:parseInt(ac),employe:data.employe,date:tod()});
@@ -1264,7 +1285,7 @@ function openCaisseForm(){
   var h="<div class='fg'><label>Type</label><select id='cf-t'>"+opt(["Chambre","Restaurant","Bar","Divers"])+"</select></div>";
   h+="<div class='fg'><label>Description *</label><input id='cf-d' placeholder='ex: Table 3 dejeuner'/></div>";
   h+="<div class='fg'><label>Montant (F) *</label><input type='number' id='cf-m' placeholder='0'/></div>";
-  h+="<div class='fg'><label>Encaisse par</label><select id='cf-e'>"+opt(EMP)+"</select></div>";
+  h+="<div class='fg'><label>Encaisse par</label><select id='cf-e'>"+optEmp()+"</select></div>";
   h+="<div class='fg'><label>Date</label><input type='date' id='cf-dt' value='"+tod()+"'/></div>";
   h+="<button class='btn bgreen bfull' onclick='saveCaisse()'>Enregistrer</button>";
   openModal("Nouvelle recette",h);
@@ -1272,7 +1293,7 @@ function openCaisseForm(){
 function saveCaisse(){
   var d=gv("cf-d").trim(),m=gi("cf-m");
   if(!d||!m){alert("Description et montant obligatoires.");return;}
-  addTX({type:gv("cf-t")||"Divers",desc:d,montant:m,employe:gv("cf-e")||EMP[0],date:gv("cf-dt")||tod()});
+  addTX({type:gv("cf-t")||"Divers",desc:d,montant:m,employe:gv("cf-e")||(CURRENT_EMP&&CURRENT_EMP.nom)||EMP[0],date:gv("cf-dt")||tod()});
   closeModal();
 }
 function reinitMois(){
@@ -1303,7 +1324,7 @@ function openDepForm(){
   var h="<div class='fg'><label>Categorie</label><select id='dep-cat'>"+opt(CAT_DEP)+"</select></div>";
   h+="<div class='fg'><label>Description *</label><input id='dep-d' placeholder='ex: Achat riz 50kg'/></div>";
   h+="<div class='fg'><label>Montant (F) *</label><input type='number' id='dep-m' placeholder='0'/></div>";
-  h+="<div class='fg'><label>Paye par</label><select id='dep-e'>"+opt(EMP)+"</select></div>";
+  h+="<div class='fg'><label>Paye par</label><select id='dep-e'>"+optEmp()+"</select></div>";
   h+="<div class='fg'><label>Date</label><input type='date' id='dep-dt' value='"+tod()+"'/></div>";
   h+="<div class='fg'><label>Notes</label><input id='dep-notes' placeholder='Optionnel...'/></div>";
   h+="<button class='btn bred bfull' onclick='saveDep()'>Enregistrer la depense</button>";
@@ -1312,7 +1333,7 @@ function openDepForm(){
 function saveDep(){
   var d=gv("dep-d").trim(),m=gi("dep-m");
   if(!d||!m){alert("Description et montant obligatoires.");return;}
-  addDEP({categorie:gv("dep-cat")||"Autre",desc:d,montant:m,employe:gv("dep-e")||EMP[0],date:gv("dep-dt")||tod(),notes:gv("dep-notes")});
+  addDEP({categorie:gv("dep-cat")||"Autre",desc:d,montant:m,employe:gv("dep-e")||(CURRENT_EMP&&CURRENT_EMP.nom)||EMP[0],date:gv("dep-dt")||tod(),notes:gv("dep-notes")});
   closeModal();
 }
 
@@ -1369,7 +1390,7 @@ function saveMaint(){
   if(!editMaintId&&chambreNum&&(data.statut==="ouvert"||data.statut==="en cours")){
     saveCH(chambreNum,{statut:"maintenance",maintRaison:ti});
   }
-  if(!editMaintId&&cout>0)addDEP({categorie:"Entretien",desc:"Maintenance Ch."+(chambreNum||"?")+" - "+ti,montant:cout,employe:gv("mt-tech")||EMP[0],date:data.date});
+  if(!editMaintId&&cout>0)addDEP({categorie:"Entretien",desc:"Maintenance Ch."+(chambreNum||"?")+" - "+ti,montant:cout,employe:gv("mt-tech")||(CURRENT_EMP&&CURRENT_EMP.nom)||EMP[0],date:data.date});
   closeModal();
 }
 function resolMaint(id){
@@ -2611,7 +2632,7 @@ function deleteEmp(id,nom){
 
 // INIT
 document.getElementById("hdate").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
-document.getElementById("baremp").innerHTML=opt(EMP);
+document.getElementById("baremp").innerHTML=optEmp();
 document.getElementById("rap-du").value=tod().slice(0,7)+"-01";
 document.getElementById("rap-au").value=tod();
 renderBar();
